@@ -1,0 +1,17 @@
+{
+  "name": "modern-dashboard",
+  "version": "0.1.0",
+  "description": "Network-first admin dashboard for WordPress Multisite.",
+  "private": true,
+  "license": "GPL-2.0-or-later",
+  "scripts": {
+    "build": "wp-scripts build --webpack-src-dir=assets/src --output-path=build",
+    "start": "wp-scripts start --webpack-src-dir=assets/src --output-path=build",
+    "lint:js": "wp-scripts lint-js assets/src",
+    "format": "wp-scripts format assets/src"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.24.0",
+    "typescript": "^5.9.3"
+  }
+}
