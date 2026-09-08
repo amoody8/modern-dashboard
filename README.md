@@ -12,11 +12,11 @@ markup, or assets.
 
 ## Status
 
-**v0.3.0 — network dashboard, builder, menu editor.** Metrics collection, the
-network overview, the site list with drill-down, network-controlled settings, a
-drag-and-drop dashboard builder whose templates are assigned by role, and a
-network-defined admin menu editor. The theming layer is not built yet; see
-[Roadmap](#roadmap).
+**v0.4.0 — all four pillars.** Metrics collection, the network overview, the
+site list with drill-down, network-controlled settings, a drag-and-drop
+dashboard builder whose templates are assigned by role, a network-defined admin
+menu editor, and branding for the admin chrome and login screen. What remains is
+depth rather than new pillars; see [Roadmap](#roadmap).
 
 ## Requirements
 
@@ -51,6 +51,10 @@ at the network level and assigned per role, with a default for everyone else.
 
 **Menu editor.** Reorder, rename and hide admin menu items per role, defined
 once at the network level and applied on every site. Submenus too.
+
+**Branding.** Admin chrome colours, login screen, and white-label text (footer,
+greeting, WordPress logo), set network-wide with per-site overrides. Includes a
+live preview and WCAG contrast warnings on every foreground/background pair.
 
 **Network-controlled settings.** Collection interval and batch size, storage
 scanning on/off with a per-site time budget, staleness and inactivity
@@ -171,6 +175,39 @@ Renames are escaped on the way into the menu. WordPress treats menu titles as
 trusted markup authored by plugin code and prints them without escaping, so a
 stored label would otherwise be an injection point.
 
+### Branding validates colours, and checks they can be read
+
+Every colour ends up interpolated into a stylesheet, so `sanitize_hex_color()`
+is the gate: anything that is not hex falls back to its default rather than
+being passed through. Logos are restricted to `http`/`https` — no `javascript:`,
+no `data:`. Colours are re-validated at render time as well as on save, because
+that is where a string actually becomes CSS and an option can be changed by
+other means (WP-CLI, a migration, another plugin).
+
+The logo URL gets its own escaper. `esc_url()` is an *HTML* escaper — it encodes
+ampersands, which corrupts any URL with a query string once it is inside a CSS
+`url()`. So the raw escaper restricts the protocol, and the characters that could
+terminate the `url()` or the surrounding `<style>` are stripped.
+
+Renames of core strings reuse core's own text domain deliberately: the greeting
+replacement matches on `__( 'Howdy,', 'default' )` so it still finds the string
+in a non-English locale.
+
+The editor computes **WCAG contrast** for each foreground/background pair as you
+pick colours, and says which fail. Colour pickers show you two swatches; they say
+nothing about whether the result is readable, and a theming tool that lets you
+build an unreadable admin without comment is not finished. Below 4.5:1 is flagged
+as under the body-text threshold; below 3:1 is called what it is.
+
+An override **replaces** the network theme rather than merging with it. Merging
+needs a per-field "is this overridden?" flag and produces half-inherited themes
+that are hard to reason about; "this site has its own branding" is a state people
+can hold in their head. A consequence worth knowing: an override with branding
+switched *off* means "no branding on this site", not "fall back to the network".
+
+As with menus, `?mdash-theme=off` renders the unbranded admin for anyone who can
+`manage_options`, so a colour scheme nobody can read is always recoverable.
+
 ### Capabilities
 
 Granted dynamically through `user_has_cap`, not written into roles — roles live
@@ -201,6 +238,10 @@ src/
     MenuCatalogue.php         Observes admin menus and merges them network-wide
     MenuRules.php             Per-role hide/rename/order rules
     MenuApplier.php           Applies rules, with the lockout safeguards
+  Theme/
+    Theme.php                 Theme shape, defaults, strict sanitization
+    ThemeRepository.php       Network theme and per-site overrides
+    ThemeRenderer.php         Admin CSS, login CSS, white-label hooks
   Data/
     Store.php                 Site meta or network options, plus the staleness index
     SiteCollector.php         switch_to_blog orchestration
@@ -211,11 +252,13 @@ src/
   Rest/Routes.php             modern-dashboard/v1
   Rest/BuilderRoutes.php      Builder endpoints in the same namespace
   Rest/MenuRoutes.php         Menu catalogue and rules endpoints
+  Rest/ThemeRoutes.php        Branding endpoints
   Admin/                      Menu pages and asset loading
 assets/src/                   React app (source)
   blocks/                     One renderer per block type
   builder/                    Canvas, palette, inspector, role assignment
   menu/                       Menu editor
+  theme/                      Branding editor, colour fields, preview
 build/                        React app (built, committed so the repo installs as-is)
 ```
 
@@ -249,6 +292,8 @@ when the network allows it.
 | `/templates/assignments` | POST | Set the role map and the default template |
 | `/menu` | GET / POST | The observed menu catalogue and the per-role rules |
 | `/menu/catalogue` | DELETE | Clear the catalogue so it rebuilds from scratch |
+| `/theme` | GET / POST | The network-wide branding |
+| `/theme/site/{id}` | GET / POST / DELETE | One site's branding override |
 
 ## Extending
 
@@ -315,9 +360,12 @@ npm run start          # watch mode
 npm run lint:js        # ESLint + Prettier (@wordpress/scripts)
 npm run format         # autoformat
 
+npm test               # node --test: contrast maths
+
 composer install
 composer lint          # phpcs (WordPress-Extra + Docs + PHPCompatibility)
 composer lint:fix      # phpcbf
+composer test          # PHP smoke tests, no WordPress install needed
 ```
 
 `build/` is committed so the repository can be zipped and installed directly.
@@ -345,6 +393,10 @@ composer lint:fix      # phpcbf
   is the most likely thing to be misread as security.
 - **A custom menu order drops separators.** Their positions stop meaning anything
   once the items around them have moved.
+- **Branding is colours and text, not layout.** It restyles the existing admin
+  chrome; it does not move or restructure it.
+- **A per-site branding override replaces the network theme**, it does not merge
+  with it. See the note above.
 
 ## Roadmap
 
@@ -352,13 +404,13 @@ Ordered by what a network actually needs next, not by UiPress feature order.
 
 1. **Per-site dashboards** — let a network template replace each site's own
    `index.php`, so site admins land on a dashboard the network authored.
-2. **Theming / white-label** — admin chrome, colours, login screen, per-site
-   branding controlled from the network.
-3. **Historical trends** — the collector already timestamps everything; keeping
+2. **Historical trends** — the collector already timestamps everything; keeping
    snapshots turns the current point-in-time numbers into graphs, and gives the
    chart block something to plot over time.
-4. **Bulk actions** — act on filtered site sets (update plugins, archive
+3. **Bulk actions** — act on filtered site sets (update plugins, archive
    inactive sites) from the site list.
+4. **Branding presets** — save a colour scheme once and apply it to a set of
+   sites, rather than re-entering it per site.
 
 ## Licence
 

@@ -1,10 +1,10 @@
 === Modern Dashboard ===
 Contributors: amoody8
-Tags: multisite, network, dashboard, admin, menu
+Tags: multisite, network, dashboard, admin, white-label
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,12 @@ Reorder, rename and hide admin menu items — top level and submenus — per rol
 
 Hiding a menu item tidies the screen; it does not revoke a capability, and the page stays reachable by URL. Use roles and capabilities for access control. Network admin screens are never modified, super administrators are exempt by default, and any administrator can add ?mdash-menu=off to an admin URL to see the untouched menu, so a bad rule can always be undone.
 
+= Branding =
+
+Set the admin menu and toolbar colours, the login screen, and white-label text — the admin footer, the "Howdy" greeting, and the WordPress logo in the toolbar. Network-wide, with per-site overrides.
+
+The editor shows a live preview and checks the contrast of every text-on-background pair as you choose colours, so an unreadable scheme is caught before you save it rather than after. If one slips through anyway, adding ?mdash-theme=off to any admin URL shows the unbranded admin.
+
 = Network-controlled =
 
 The network admin sets the collection schedule, builds the dashboards, decides which role sees which one, picks which sites are excluded, and chooses whether site administrators may see their own site's numbers. Individual sites inherit those decisions.
@@ -70,11 +76,22 @@ Data will not refresh automatically. Use the "Collect a batch now" button, or po
 
 No. It tidies the menu; the page is still reachable by its URL for anyone whose role allows it. Menu rules are presentation, not permissions.
 
+= Can I brand one site differently from the rest? =
+
+Yes. Pick the site in the Branding tab and give it its own theme. A site override replaces the network branding entirely rather than merging with it, so an override with branding switched off means that site is unbranded — not that it falls back to the network.
+
 = Can site administrators use it? =
 
 Only if you let them. When enabled, a site administrator sees a read-only view of their own site under **Dashboard → Site Metrics** and nothing about the rest of the network.
 
 == Changelog ==
+
+= 0.4.0 =
+* Added branding: admin chrome colours, login screen styling, custom login logo, and white-label footer, greeting and toolbar logo.
+* Branding is network-wide with per-site overrides; an override replaces the network theme rather than merging with it.
+* The editor computes WCAG contrast for each text-on-background pair and flags combinations below the 4.5:1 body-text threshold.
+* Colours are validated as hex and logos restricted to http/https, on save and again at render, since these values become CSS.
+* ?mdash-theme=off renders the unbranded admin for any administrator, so an unreadable colour scheme is always recoverable.
 
 = 0.3.0 =
 * Added the admin menu editor: drag to reorder, rename and hide menu items per role, submenus included, defined at the network level.

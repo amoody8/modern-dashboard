@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import Builder from '../builder/Builder';
 import MenuEditor from '../menu/MenuEditor';
+import ThemeEditor from '../theme/ThemeEditor';
 import DashboardRenderer from './DashboardRenderer';
 import SettingsPanel from './SettingsPanel';
 import SiteDetail from './SiteDetail';
@@ -29,6 +30,11 @@ const TABS = () => [
 	{
 		key: 'menus',
 		label: __( 'Menus', 'modern-dashboard' ),
+		manage: true,
+	},
+	{
+		key: 'branding',
+		label: __( 'Branding', 'modern-dashboard' ),
 		manage: true,
 	},
 	{
@@ -237,6 +243,8 @@ export default function App() {
 					) }
 
 					{ tab === 'menus' && canManage && <MenuEditor /> }
+
+					{ tab === 'branding' && canManage && <ThemeEditor /> }
 
 					{ tab === 'settings' && canManage && (
 						<SettingsPanel

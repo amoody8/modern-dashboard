@@ -24,8 +24,11 @@ use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
 use ModernDashboard\Rest\BuilderRoutes;
 use ModernDashboard\Rest\MenuRoutes;
+use ModernDashboard\Rest\ThemeRoutes;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
+use ModernDashboard\Theme\ThemeRenderer;
+use ModernDashboard\Theme\ThemeRepository;
 use ModernDashboard\Support\Capabilities;
 use ModernDashboard\Support\Requirements;
 
@@ -44,6 +47,7 @@ final class Plugin {
 	private ?TemplateRepository $templates = null;
 	private ?MenuCatalogue $catalogue      = null;
 	private ?MenuRules $menu_rules         = null;
+	private ?ThemeRepository $themes       = null;
 
 	public function __construct( string $file, string $version ) {
 		$this->file    = $file;
@@ -94,6 +98,10 @@ final class Plugin {
 		return $this->menu_rules ??= new MenuRules();
 	}
 
+	public function themes(): ThemeRepository {
+		return $this->themes ??= new ThemeRepository();
+	}
+
 	public function templates(): TemplateRepository {
 		return $this->templates ??= new TemplateRepository(
 			$this->registry(),
@@ -122,6 +130,8 @@ final class Plugin {
 		( new MenuRoutes( $this->catalogue(), $this->menu_rules(), $this->templates() ) )->register();
 		$this->catalogue()->register();
 		( new MenuApplier( $this->menu_rules() ) )->register();
+		( new ThemeRoutes( $this->themes() ) )->register();
+		( new ThemeRenderer( $this->themes() ) )->register();
 		( new NetworkAdminPage() )->register();
 		( new Assets( $this ) )->register();
 

@@ -54,6 +54,23 @@ function is_network_admin() { return $GLOBALS['is_network_admin'] ?? false; }
 function is_user_admin() { return false; }
 function wp_strip_all_tags( $t ) { return trim( strip_tags( (string) $t ) ); }
 function wp_json_encode( $d ) { return json_encode( $d ); }
+function sanitize_hex_color( $c ) {
+	$c = (string) $c;
+	if ( '' === $c ) { return ''; }
+	return preg_match( '/^#([A-Fa-f0-9]{3}){1,2}$/', $c ) ? $c : null;
+}
+function esc_url_raw( $url, $protocols = null ) {
+	$url = trim( (string) $url );
+	if ( '' === $url ) { return ''; }
+	$scheme = strtolower( (string) parse_url( $url, PHP_URL_SCHEME ) );
+	return in_array( $scheme, (array) ( $protocols ?? array( 'http', 'https' ) ), true ) ? $url : '';
+}
+function get_current_blog_id() { return $GLOBALS['current_blog'] ?? 1; }
+function switch_to_blog( $id ) { $GLOBALS['blog_stack'][] = $GLOBALS['current_blog'] ?? 1; $GLOBALS['current_blog'] = (int) $id; }
+function restore_current_blog() { $GLOBALS['current_blog'] = array_pop( $GLOBALS['blog_stack'] ) ?? 1; }
+function get_option( $key, $default = false ) { return $GLOBALS['blog_options'][ get_current_blog_id() ][ $key ] ?? $default; }
+function update_option( $key, $value ) { $GLOBALS['blog_options'][ get_current_blog_id() ][ $key ] = $value; return true; }
+function delete_option( $key ) { unset( $GLOBALS['blog_options'][ get_current_blog_id() ][ $key ] ); return true; }
 function is_super_admin( $id = 0 ) { return in_array( (int) $id, $GLOBALS['super_admins'] ?? array(), true ); }
 function wp_get_current_user() { return $GLOBALS['current_user'] ?? null; }
 function is_wp_error( $t ) { return $t instanceof WP_Error; }
@@ -443,6 +460,87 @@ $GLOBALS['menu'][40] = array( 'Network only', 'manage_network', 'network-only.ph
 $catalogue->capture();
 check( 'network admin menus are never captured', $GLOBALS['net_writes'], $writes_before );
 $GLOBALS['is_network_admin'] = false;
+
+// --- Theme sanitization ----------------------------------------------------
+
+echo "\nTheme::sanitize\n";
+
+$theme = ModernDashboard\Theme\Theme::sanitize(
+	array(
+		'menu_bg'          => '#123456',
+		'menu_text'        => '#abc',
+		// Colours reach a stylesheet, so anything that is not hex must not pass.
+		'accent'           => 'red',
+		'link'             => 'url(javascript:alert(1))',
+		'bar_bg'           => '#12345',
+		'radius'           => 999,
+		'login_logo'       => 'javascript:alert(1)',
+		'login_logo_width' => 5,
+		'login_url'        => 'https://example.com/brand',
+		'footer_text'      => '  <b>Built by Acme</b>  ',
+		'howdy_text'       => 'Hello,',
+		'hide_wp_logo'     => 'yes',
+		'enabled'          => 1,
+	)
+);
+
+$defaults = ModernDashboard\Theme\Theme::defaults();
+
+check( 'valid hex kept', $theme['menu_bg'], '#123456' );
+check( 'shorthand hex kept', $theme['menu_text'], '#abc' );
+check( 'named colour rejected', $theme['accent'], $defaults['accent'] );
+check( 'css function rejected', $theme['link'], $defaults['link'] );
+check( 'malformed hex rejected', $theme['bar_bg'], $defaults['bar_bg'] );
+check( 'radius clamped', $theme['radius'], 24 );
+check( 'javascript: logo rejected', $theme['login_logo'], '' );
+check( 'https logo url kept', $theme['login_url'], 'https://example.com/brand' );
+check( 'logo width floored', $theme['login_logo_width'], 24 );
+check( 'footer markup stripped and trimmed', $theme['footer_text'], 'Built by Acme' );
+check( 'greeting kept', $theme['howdy_text'], 'Hello,' );
+check( 'booleans coerced', array( $theme['hide_wp_logo'], $theme['enabled'] ), array( true, true ) );
+
+$data_url = ModernDashboard\Theme\Theme::sanitize( array( 'login_logo' => 'data:image/svg+xml;base64,PHN2Zz4=' ) );
+check( 'data: logo rejected', $data_url['login_logo'], '' );
+
+$empty = ModernDashboard\Theme\Theme::sanitize( array() );
+check( 'empty input yields defaults', $empty['menu_bg'], $defaults['menu_bg'] );
+check( 'branding off by default', $empty['enabled'], false );
+
+// --- ThemeRepository -------------------------------------------------------
+
+echo "\nThemeRepository\n";
+
+$GLOBALS['net_options']  = array();
+$GLOBALS['blog_options'] = array();
+$GLOBALS['current_blog'] = 1;
+$GLOBALS['blog_stack']   = array();
+
+$themes = new ModernDashboard\Theme\ThemeRepository();
+
+check( 'nothing renders before branding is enabled', $themes->resolve( 1 ), null );
+
+$themes->save_network( array_merge( $defaults, array( 'enabled' => true, 'menu_bg' => '#001122' ) ) );
+check( 'network theme applies once enabled', $themes->resolve( 1 )['menu_bg'], '#001122' );
+
+check( 'a site with no override has none', $themes->site_override( 2 ), null );
+check( 'a site with no override follows the network', $themes->resolve( 2 )['menu_bg'], '#001122' );
+
+$themes->save_site( 2, array_merge( $defaults, array( 'enabled' => true, 'menu_bg' => '#334455' ) ) );
+check( 'override wins for its own site', $themes->resolve( 2 )['menu_bg'], '#334455' );
+check( 'other sites are unaffected', $themes->resolve( 1 )['menu_bg'], '#001122' );
+
+// An override replaces the network theme rather than merging, so a disabled
+// override means "no branding here", not "fall back to the network".
+$themes->save_site( 2, array_merge( $defaults, array( 'enabled' => false ) ) );
+check( 'disabled override means no branding, not inheritance', $themes->resolve( 2 ), null );
+
+$themes->clear_site( 2 );
+check( 'cleared override returns the site to the network', $themes->resolve( 2 )['menu_bg'], '#001122' );
+check( 'switching blogs left the current site restored', get_current_blog_id(), 1 );
+
+$themes_reread = new ModernDashboard\Theme\ThemeRepository();
+$GLOBALS['net_options'][ ModernDashboard\Theme\ThemeRepository::NETWORK_OPTION ]['accent'] = 'orange';
+check( 'stored garbage is re-sanitized on read', $themes_reread->network()['accent'], $defaults['accent'] );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail === 0 ? 0 : 1 );

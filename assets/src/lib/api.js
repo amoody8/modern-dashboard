@@ -79,4 +79,16 @@ export const api = {
 
 	resetMenuCatalogue: () =>
 		apiFetch( { path: 'menu/catalogue', method: 'DELETE' } ),
+
+	theme: () => apiFetch( { path: 'theme' } ),
+
+	saveTheme: ( data ) => apiFetch( { path: 'theme', method: 'POST', data } ),
+
+	siteTheme: ( id ) => apiFetch( { path: `theme/site/${ id }` } ),
+
+	saveSiteTheme: ( id, data ) =>
+		apiFetch( { path: `theme/site/${ id }`, method: 'POST', data } ),
+
+	clearSiteTheme: ( id ) =>
+		apiFetch( { path: `theme/site/${ id }`, method: 'DELETE' } ),
 };

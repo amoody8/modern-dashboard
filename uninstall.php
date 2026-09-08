@@ -24,6 +24,7 @@ use ModernDashboard\Data\Store;
 use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
 use ModernDashboard\Settings\Settings;
+use ModernDashboard\Theme\ThemeRepository;
 
 wp_clear_scheduled_hook( Scheduler::HOOK );
 
@@ -50,12 +51,18 @@ if ( function_exists( 'is_site_meta_supported' ) && is_site_meta_supported() ) {
 // Network-option fallback storage: one option per site.
 foreach ( (array) $modern_dashboard_site_ids as $modern_dashboard_site_id ) {
 	delete_network_option( null, 'modern_dashboard_metrics_' . (int) $modern_dashboard_site_id );
+
+	// Branding overrides are blog options, so they live on each site.
+	switch_to_blog( (int) $modern_dashboard_site_id );
+	delete_option( ThemeRepository::SITE_OPTION );
+	restore_current_blog();
 }
 
 delete_network_option( null, Settings::OPTION );
 delete_network_option( null, TemplateRepository::OPTION );
 delete_network_option( null, MenuCatalogue::OPTION );
 delete_network_option( null, MenuRules::OPTION );
+delete_network_option( null, ThemeRepository::NETWORK_OPTION );
 delete_network_option( null, Store::INDEX_OPTION );
 delete_network_option( null, Scheduler::LAST_RUN );
 
