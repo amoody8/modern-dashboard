@@ -6,12 +6,11 @@ import { useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Checkbox, Field, Notice, Spinner } from './Primitives';
 import { api } from '../lib/api';
-import { cardLabels, intervalLabels } from '../lib/labels';
+import { intervalLabels } from '../lib/labels';
 import { formatRelative } from '../lib/format';
 
 export default function SettingsPanel( { onSaved } ) {
 	const [ settings, setSettings ] = useState( null );
-	const [ cards, setCards ] = useState( [] );
 	const [ intervals, setIntervals ] = useState( [] );
 	const [ saving, setSaving ] = useState( false );
 	const [ status, setStatus ] = useState( null );
@@ -22,7 +21,6 @@ export default function SettingsPanel( { onSaved } ) {
 		api.settings()
 			.then( ( data ) => {
 				setSettings( data.settings );
-				setCards( data.cards );
 				setIntervals( data.intervals );
 			} )
 			.catch( ( err ) =>
@@ -35,20 +33,6 @@ export default function SettingsPanel( { onSaved } ) {
 
 	const set = ( key, value ) =>
 		setSettings( ( current ) => ( { ...current, [ key ]: value } ) );
-
-	const toggleCard = ( card ) => {
-		setSettings( ( current ) => {
-			const visible = current.visible_cards.includes( card )
-				? current.visible_cards.filter( ( item ) => item !== card )
-				: [ ...current.visible_cards, card ];
-
-			// The API falls back to every card when the list is emptied, so keep
-			// the UI honest and refuse to send an empty selection.
-			return visible.length === 0
-				? current
-				: { ...current, visible_cards: visible };
-		} );
-	};
 
 	const save = ( event ) => {
 		event.preventDefault();
@@ -80,7 +64,6 @@ export default function SettingsPanel( { onSaved } ) {
 	}
 
 	const labels = intervalLabels();
-	const cardNames = cardLabels();
 
 	const nextRunNote = nextRun
 		? ` ${ sprintf(
@@ -255,30 +238,6 @@ export default function SettingsPanel( { onSaved } ) {
 						/>
 					) }
 				</Field>
-			</section>
-
-			<section className="md-panel">
-				<header className="md-panel__header">
-					<h2>{ __( 'Visible cards', 'modern-dashboard' ) }</h2>
-				</header>
-
-				<p className="md-panel__intro">
-					{ __(
-						'Choose what the overview shows. Every site in the network inherits this.',
-						'modern-dashboard'
-					) }
-				</p>
-
-				<div className="md-checks">
-					{ cards.map( ( card ) => (
-						<Checkbox
-							key={ card }
-							label={ cardNames[ card ] || card }
-							checked={ settings.visible_cards.includes( card ) }
-							onChange={ () => toggleCard( card ) }
-						/>
-					) ) }
-				</div>
 			</section>
 
 			<section className="md-panel">

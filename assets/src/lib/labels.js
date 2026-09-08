@@ -35,12 +35,3 @@ export const intervalLabels = () => ( {
 	twicedaily: __( 'Twice daily', 'modern-dashboard' ),
 	daily: __( 'Daily', 'modern-dashboard' ),
 } );
-
-export const cardLabels = () => ( {
-	sites: __( 'Sites', 'modern-dashboard' ),
-	users: __( 'Users', 'modern-dashboard' ),
-	content: __( 'Content', 'modern-dashboard' ),
-	updates: __( 'Updates', 'modern-dashboard' ),
-	storage: __( 'Storage', 'modern-dashboard' ),
-	attention: __( 'Needs attention', 'modern-dashboard' ),
-} );

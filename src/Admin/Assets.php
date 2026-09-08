@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace ModernDashboard\Admin;
 
+use ModernDashboard\Builder\BlockRegistry;
 use ModernDashboard\Plugin;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
@@ -95,7 +96,7 @@ final class Assets {
 			'blogId'    => get_current_blog_id(),
 			'canManage' => Capabilities::can_manage(),
 			'settings'  => $settings->all(),
-			'cards'     => Settings::CARDS,
+			'columns'   => BlockRegistry::COLUMNS,
 			'intervals' => Settings::INTERVALS,
 			'links'     => array(
 				'sites'   => network_admin_url( 'sites.php' ),

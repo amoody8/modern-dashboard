@@ -57,4 +57,19 @@ export const api = {
 
 	saveSettings: ( data ) =>
 		apiFetch( { path: 'settings', method: 'POST', data } ),
+
+	blocks: () => apiFetch( { path: 'blocks' } ),
+
+	templates: () => apiFetch( { path: 'templates' } ),
+
+	activeTemplate: () => apiFetch( { path: 'templates/active' } ),
+
+	saveTemplate: ( data ) =>
+		apiFetch( { path: 'templates', method: 'POST', data } ),
+
+	deleteTemplate: ( id ) =>
+		apiFetch( { path: `templates/${ id }`, method: 'DELETE' } ),
+
+	saveAssignments: ( data ) =>
+		apiFetch( { path: 'templates/assignments', method: 'POST', data } ),
 };

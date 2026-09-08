@@ -277,7 +277,6 @@ final class Routes {
 			array(
 				'settings'  => $this->settings->all(),
 				'schema'    => Settings::rest_schema(),
-				'cards'     => Settings::CARDS,
 				'intervals' => Settings::INTERVALS,
 			)
 		);

@@ -10,12 +10,16 @@ declare( strict_types = 1 );
 namespace ModernDashboard;
 
 use ModernDashboard\Admin\Assets;
+use ModernDashboard\Builder\BlockRegistry;
+use ModernDashboard\Builder\LayoutSanitizer;
+use ModernDashboard\Builder\TemplateRepository;
 use ModernDashboard\Admin\NetworkAdminPage;
 use ModernDashboard\Cron\Scheduler;
 use ModernDashboard\Data\MetricsRepository;
 use ModernDashboard\Data\NetworkAggregator;
 use ModernDashboard\Data\SiteCollector;
 use ModernDashboard\Data\Store;
+use ModernDashboard\Rest\BuilderRoutes;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
 use ModernDashboard\Support\Capabilities;
@@ -28,10 +32,12 @@ final class Plugin {
 	private string $file;
 	private string $version;
 
-	private ?Settings $settings           = null;
-	private ?Store $store                 = null;
-	private ?MetricsRepository $repo      = null;
-	private ?NetworkAggregator $aggregate = null;
+	private ?Settings $settings            = null;
+	private ?Store $store                  = null;
+	private ?MetricsRepository $repo       = null;
+	private ?NetworkAggregator $aggregate  = null;
+	private ?BlockRegistry $registry       = null;
+	private ?TemplateRepository $templates = null;
 
 	public function __construct( string $file, string $version ) {
 		$this->file    = $file;
@@ -70,6 +76,17 @@ final class Plugin {
 		return $this->aggregate ??= new NetworkAggregator( $this->repository() );
 	}
 
+	public function registry(): BlockRegistry {
+		return $this->registry ??= new BlockRegistry();
+	}
+
+	public function templates(): TemplateRepository {
+		return $this->templates ??= new TemplateRepository(
+			$this->registry(),
+			new LayoutSanitizer( $this->registry() )
+		);
+	}
+
 	/**
 	 * Wire everything up. Bails early (with a notice) when requirements fail so a
 	 * mismatched environment degrades to an explanation rather than a fatal.
@@ -87,6 +104,7 @@ final class Plugin {
 
 		( new Scheduler( $this->repository(), $this->settings() ) )->register();
 		( new Routes( $this->repository(), $this->aggregator(), $this->settings() ) )->register();
+		( new BuilderRoutes( $this->registry(), $this->templates() ) )->register();
 		( new NetworkAdminPage() )->register();
 		( new Assets( $this ) )->register();
 

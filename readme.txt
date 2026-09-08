@@ -1,10 +1,10 @@
 === Modern Dashboard ===
 Contributors: amoody8
-Tags: multisite, network, dashboard, admin, management
+Tags: multisite, network, dashboard, admin, builder
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,9 +30,13 @@ User counts by role, content and comment breakdown, active theme and version, th
 
 Metrics are never collected during a page load. A background job refreshes the stalest sites a batch at a time, so a ten-site network and a ten-thousand-site network cost the same per request. Batch size, interval and the per-site storage scan budget are all configurable.
 
+= Dashboard builder =
+
+Compose the overview from blocks — statistics, a ranked bar chart, the attention list, a site list, network facts, headings and notes. Drag them into place, set each one's width, and save. Blocks flow across a twelve-column grid, so a layout that looks right on a desktop still reads correctly on a phone.
+
 = Network-controlled =
 
-The network admin sets the collection schedule, which overview cards appear, which sites are excluded, and whether site administrators may see their own site's numbers. Individual sites inherit those decisions.
+The network admin sets the collection schedule, builds the dashboards, decides which role sees which one, picks which sites are excluded, and chooses whether site administrators may see their own site's numbers. Individual sites inherit those decisions.
 
 == Installation ==
 
@@ -61,6 +65,12 @@ Data will not refresh automatically. Use the "Collect a batch now" button, or po
 Only if you let them. When enabled, a site administrator sees a read-only view of their own site under **Dashboard → Site Metrics** and nothing about the rest of the network.
 
 == Changelog ==
+
+= 0.2.0 =
+* Added the dashboard builder: drag-to-reorder blocks on a twelve-column grid, per-block settings, and templates assigned by role.
+* Added block types for statistics, a ranked bar chart, the attention list, a site list, network facts, data freshness, headings, notes and spacers.
+* Blocks are registerable from PHP through the `modern_dashboard_blocks` filter; the palette, inspector and server-side validation all build themselves from the definition.
+* The overview is now whatever template your role is assigned, which replaces the old fixed "visible cards" setting.
 
 = 0.1.0 =
 * Initial release: network overview, site list with drill-down, batched background collection, and network-controlled settings.

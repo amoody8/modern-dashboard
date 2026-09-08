@@ -4,17 +4,32 @@
 
 import { useCallback, useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
-import Overview from './Overview';
+import Builder from '../builder/Builder';
+import DashboardRenderer from './DashboardRenderer';
 import SettingsPanel from './SettingsPanel';
 import SiteDetail from './SiteDetail';
 import SitesTable from './SitesTable';
 import { Notice } from './Primitives';
 import { api, config } from '../lib/api';
+import { clearSitesCache } from '../lib/useSites';
 
 const TABS = () => [
-	{ key: 'overview', label: __( 'Overview', 'modern-dashboard' ) },
-	{ key: 'sites', label: __( 'Sites', 'modern-dashboard' ) },
-	{ key: 'settings', label: __( 'Settings', 'modern-dashboard' ) },
+	{
+		key: 'overview',
+		label: __( 'Overview', 'modern-dashboard' ),
+		manage: false,
+	},
+	{ key: 'sites', label: __( 'Sites', 'modern-dashboard' ), manage: false },
+	{
+		key: 'builder',
+		label: __( 'Builder', 'modern-dashboard' ),
+		manage: true,
+	},
+	{
+		key: 'settings',
+		label: __( 'Settings', 'modern-dashboard' ),
+		manage: true,
+	},
 ];
 
 export default function App() {
@@ -22,15 +37,13 @@ export default function App() {
 
 	const [ tab, setTab ] = useState( 'overview' );
 	const [ overview, setOverview ] = useState( null );
+	const [ template, setTemplate ] = useState( null );
 	const [ loading, setLoading ] = useState( true );
 	const [ error, setError ] = useState( null );
 	const [ selectedId, setSelectedId ] = useState( null );
 	const [ refreshToken, setRefreshToken ] = useState( 0 );
 	const [ collecting, setCollecting ] = useState( false );
 	const [ message, setMessage ] = useState( null );
-	const [ visibleCards, setVisibleCards ] = useState(
-		config.settings?.visible_cards || config.cards || []
-	);
 
 	const loadOverview = useCallback( ( fresh = false ) => {
 		setLoading( true );
@@ -53,9 +66,36 @@ export default function App() {
 			.finally( () => setLoading( false ) );
 	}, [] );
 
+	const loadTemplate = useCallback( () => {
+		return api
+			.activeTemplate()
+			.then( setTemplate )
+			.catch( ( err ) =>
+				setError(
+					err.message ||
+						__(
+							'Could not load the dashboard layout.',
+							'modern-dashboard'
+						)
+				)
+			);
+	}, [] );
+
 	useEffect( () => {
 		loadOverview();
 	}, [ loadOverview, refreshToken ] );
+
+	useEffect( () => {
+		loadTemplate();
+	}, [ loadTemplate ] );
+
+	// Blocks cache their slice of the sites list, so a collection run has to
+	// invalidate that too or the numbers on the dashboard stay stale.
+	useEffect( () => {
+		if ( refreshToken > 0 ) {
+			clearSitesCache();
+		}
+	}, [ refreshToken ] );
 
 	const collectNow = () => {
 		setCollecting( true );
@@ -95,6 +135,7 @@ export default function App() {
 	};
 
 	const onSiteRefreshed = useCallback( () => {
+		clearSitesCache();
 		setRefreshToken( ( token ) => token + 1 );
 	}, [] );
 
@@ -147,7 +188,7 @@ export default function App() {
 				aria-label={ __( 'Dashboard sections', 'modern-dashboard' ) }
 			>
 				{ TABS()
-					.filter( ( item ) => item.key !== 'settings' || canManage )
+					.filter( ( item ) => ! item.manage || canManage )
 					.map( ( item ) => (
 						<button
 							key={ item.key }
@@ -168,11 +209,11 @@ export default function App() {
 			<div className="md-body">
 				<div className="md-body__main">
 					{ tab === 'overview' && (
-						<Overview
+						<DashboardRenderer
+							template={ template }
 							overview={ overview }
 							loading={ loading }
 							error={ error }
-							visibleCards={ visibleCards }
 							onSelectSite={ setSelectedId }
 						/>
 					) }
@@ -185,12 +226,15 @@ export default function App() {
 						/>
 					) }
 
+					{ tab === 'builder' && canManage && (
+						<Builder overview={ overview } />
+					) }
+
 					{ tab === 'settings' && canManage && (
 						<SettingsPanel
-							onSaved={ ( settings ) => {
-								setVisibleCards( settings.visible_cards );
-								setRefreshToken( ( token ) => token + 1 );
-							} }
+							onSaved={ () =>
+								setRefreshToken( ( token ) => token + 1 )
+							}
 						/>
 					) }
 				</div>

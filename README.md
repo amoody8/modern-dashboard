@@ -12,10 +12,10 @@ markup, or assets.
 
 ## Status
 
-**v0.1.0 — the network dashboard.** Metrics collection, the network overview,
-the site list with drill-down, and network-controlled settings all work. The
-drag-and-drop dashboard builder, menu editor and theming layers are not built
-yet; see [Roadmap](#roadmap).
+**v0.2.0 — the network dashboard, plus the builder.** Metrics collection, the
+network overview, the site list with drill-down, network-controlled settings,
+and a drag-and-drop dashboard builder whose templates are assigned by role. The
+menu editor and theming layers are not built yet; see [Roadmap](#roadmap).
 
 ## Requirements
 
@@ -43,10 +43,15 @@ breakdown, active theme and version, the specific plugins that are out of date o
 that site, uploads size, and when the data was last collected. Refresh any single
 site on demand.
 
+**Dashboard builder.** Compose the overview from blocks — statistics, a ranked
+bar chart, the attention list, a site list, network facts, headings and notes —
+by dragging them into place and setting each one's width. Templates are stored
+at the network level and assigned per role, with a default for everyone else.
+
 **Network-controlled settings.** Collection interval and batch size, storage
 scanning on/off with a per-site time budget, staleness and inactivity
-thresholds, which overview cards are visible, excluded sites, and whether site
-administrators may see their own site's numbers.
+thresholds, excluded sites, and whether site administrators may see their own
+site's numbers.
 
 ## Architecture
 
@@ -84,6 +89,42 @@ network. The site list primes the whole meta cache in a single query.
 - Collection never triggers an update check. That would mean one outbound
   request to wordpress.org per site. It reads what WordPress has already cached.
 
+### Templates are a flow, not a free grid
+
+A block has a **width in twelfths** and blocks flow left to right; dragging
+reorders them. It would have been showier to give every block an x/y position on
+a canvas, but a freely positioned grid buys its looks with permanent complexity:
+breakpoint rules, overlap resolution, and a collapse order that has to be
+authored separately for every layout. Width spans give real control and stay
+correct on a phone, so the responsive behaviour is a property of the model rather
+than a pile of special cases. Narrow screens fall back to a two-column grid where
+wide blocks stay wide and small ones pair up.
+
+The registry is the single authority on what a block is. The palette, the
+inspector's controls and the server-side validation are all generated from the
+same definition, so a block type added through the `modern_dashboard_blocks`
+filter gets a working editor without a line of JavaScript.
+
+Nothing arriving from the browser is trusted: unknown block types are dropped,
+widths are clamped to what each block declares it can handle, unknown settings
+keys are discarded, and every value is coerced to the type its schema declares.
+The builder's canvas and the live dashboard share one renderer, so what an editor
+arranges is literally what a viewer gets — there is no second implementation to
+drift.
+
+### Charts
+
+The one chart type is a ranked horizontal bar chart, drawn in plain HTML rather
+than pulled from a charting library — one form, done properly, costs less than a
+dependency. It is a single series, so it carries no legend (the title names what
+is plotted) and no gridlines (every bar is labelled with its value at the tip).
+A table view is one click away for anyone who wants the numbers directly.
+
+The bar colour was validated rather than eyeballed, which caught a real problem:
+the plugin's WordPress-admin accent `#2271b1` passes contrast on the light
+surface but measures **2.88:1** on the dark one, under the 3:1 floor. Dark mode
+therefore steps to `#3987e5`. Both live in `--md-chart-bar`.
+
 ### Capabilities
 
 Granted dynamically through `user_has_cap`, not written into roles — roles live
@@ -106,6 +147,10 @@ src/
     Requirements.php          PHP / WP / multisite / network-activation gate
     Capabilities.php          Dynamic capability grants
   Settings/Settings.php       Network-wide settings, sanitizer, REST schema
+  Builder/
+    BlockRegistry.php         Block catalogue: labels, schemas, width bounds
+    LayoutSanitizer.php       Validates untrusted templates against the registry
+    TemplateRepository.php    Template storage, role assignment, resolution
   Data/
     Store.php                 Site meta or network options, plus the staleness index
     SiteCollector.php         switch_to_blog orchestration
@@ -114,8 +159,11 @@ src/
     Collectors/               Content, Users, Updates, Storage
   Cron/Scheduler.php          Batched background refresh
   Rest/Routes.php             modern-dashboard/v1
+  Rest/BuilderRoutes.php      Builder endpoints in the same namespace
   Admin/                      Menu pages and asset loading
 assets/src/                   React app (source)
+  blocks/                     One renderer per block type
+  builder/                    Canvas, palette, inspector, role assignment
 build/                        React app (built, committed so the repo installs as-is)
 ```
 
@@ -142,6 +190,11 @@ when the network allows it.
 | `/sites/{id}/refresh` | POST | Collect one site now |
 | `/refresh` | POST | Run one batch now |
 | `/settings` | GET / POST | Read and write network settings |
+| `/blocks` | GET | The block registry, for the palette and inspector |
+| `/templates` | GET / POST | List templates and assignments; create or replace one |
+| `/templates/active` | GET | The template the current user should see |
+| `/templates/{id}` | GET / DELETE | Read or remove one template |
+| `/templates/assignments` | POST | Set the role map and the default template |
 
 ## Extending
 
@@ -165,6 +218,39 @@ collector that throws is caught: its key is nulled and the error is recorded on
 the site's record, so one bad collector never costs you the rest of the metrics.
 
 `modern_dashboard_batch_complete` fires after each batch with the refreshed IDs.
+
+Blocks are registered the same way. Supply a `label`, a `category`, `defaults`,
+and a `settings` map describing each setting, and the palette and inspector build
+themselves:
+
+```php
+add_filter( 'modern_dashboard_blocks', function ( array $blocks ): array {
+	$blocks['orders'] = array(
+		'label'         => 'Orders',
+		'category'      => 'data',
+		'min_width'     => 3,
+		'max_width'     => 12,
+		'default_width' => 4,
+		'defaults'      => array( 'range' => '7d' ),
+		'settings'      => array(
+			'range' => array(
+				'label'   => 'Range',
+				'type'    => 'select',
+				'options' => array(
+					array( 'value' => '7d', 'label' => 'Last 7 days' ),
+					array( 'value' => '30d', 'label' => 'Last 30 days' ),
+				),
+			),
+		),
+	);
+
+	return $blocks;
+} );
+```
+
+The matching React renderer is registered in `assets/src/blocks/index.js`. A type
+with no renderer shows a visible placeholder rather than empty space — a missing
+renderer should be obvious, not silent.
 
 ## Development
 
@@ -194,18 +280,24 @@ composer lint:fix      # phpcbf
   turned off entirely.
 - **Cron-dependent.** On a network with `DISABLE_WP_CRON` and no system cron,
   data will not refresh on its own. "Collect a batch now" still works.
+- **The builder governs the network dashboard only.** It does not yet take over
+  each site's own `index.php` dashboard — that is a bigger, riskier change and is
+  deliberately separate.
+- **Blocks are reordered, not freely positioned.** See the note above; this is a
+  deliberate trade, not a missing feature.
 
 ## Roadmap
 
 Ordered by what a network actually needs next, not by UiPress feature order.
 
-1. **Dashboard builder** — block canvas, layout schema, templates assigned per
-   role, network templates that sites inherit. `dnd-kit` for drag and drop.
+1. **Per-site dashboards** — let a network template replace each site's own
+   `index.php`, so site admins land on a dashboard the network authored.
 2. **Menu editor** — network-defined admin menus with per-role visibility.
 3. **Theming / white-label** — admin chrome, colours, login screen, per-site
    branding controlled from the network.
 4. **Historical trends** — the collector already timestamps everything; keeping
-   snapshots turns the current point-in-time numbers into graphs.
+   snapshots turns the current point-in-time numbers into graphs, and gives the
+   chart block something to plot over time.
 5. **Bulk actions** — act on filtered site sets (update plugins, archive
    inactive sites) from the site list.
 

@@ -18,6 +18,8 @@
 	--md-bad: #a4262c;
 	--md-bad-bg: #fdeced;
 	--md-info-bg: #eaf2fa;
+	--md-chart-bar: #2271b1;
+	--md-chart-track: #eef0f2;
 	--md-radius: 8px;
 	--md-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04);
 
@@ -643,6 +645,421 @@
 		color: var(--md-muted);
 	}
 
+	// ------------------------------------------------------------------ grid
+	//
+	// Blocks flow across a 12-column grid, sized by the `--md-span` each cell
+	// carries. Narrow screens fall back to a 2-column grid using `--md-span-sm`
+	// (set alongside it) so wide blocks stay wide and small ones pair up,
+	// instead of everything collapsing to one column at once.
+
+	.md-grid {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		gap: 12px;
+		align-items: start;
+	}
+
+	.md-grid__cell {
+		grid-column: span var(--md-span, 12);
+		min-width: 0;
+	}
+
+	@media (max-width: 960px) {
+		.md-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.md-grid__cell {
+			grid-column: span var(--md-span-sm, 2);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.md-grid__cell {
+			grid-column: 1 / -1;
+		}
+	}
+
+	// A panel used as a block supplies its own outer spacing via the grid.
+	.md-panel--flush {
+		margin-bottom: 0;
+		height: 100%;
+	}
+
+	.md-table--compact {
+		th,
+		td {
+			padding: 7px 14px;
+		}
+	}
+
+	.md-block-heading {
+		margin: 8px 0 0;
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	.md-block-heading--small {
+		font-size: 13px;
+		text-transform: uppercase;
+		letter-spacing: .04em;
+		color: var(--md-muted);
+	}
+
+	.md-block-text {
+		margin: 0;
+		padding: 12px 14px;
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius);
+		background: var(--md-surface);
+		color: var(--md-muted);
+		white-space: pre-wrap;
+	}
+
+	.md-block-spacer {
+		min-height: 1px;
+	}
+
+	.md-freshness-block {
+		padding: 14px 16px;
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius);
+		background: var(--md-surface);
+		box-shadow: var(--md-shadow);
+
+		p {
+			margin: 4px 0 0;
+			color: var(--md-muted);
+		}
+	}
+
+	// ----------------------------------------------------------------- chart
+	//
+	// Single series, so no legend: the title names what is plotted. Every bar
+	// carries its value at the tip, which is why there are no gridlines. Bars
+	// are 14px (under the 24px cap), rounded 4px at the data end only, square
+	// at the baseline, with a 6px gap between rows.
+
+	.md-chart {
+		margin: 0;
+		padding: 14px 16px;
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius);
+		background: var(--md-surface);
+		box-shadow: var(--md-shadow);
+	}
+
+	.md-chart__head {
+		display: flex;
+		gap: 12px;
+		align-items: baseline;
+		justify-content: space-between;
+		margin-bottom: 10px;
+	}
+
+	.md-chart__title {
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.md-chart__toggle {
+		font-size: 12px;
+	}
+
+	.md-chart__rows {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.md-chart__row {
+		display: grid;
+		grid-template-columns: minmax(90px, 28%) 1fr auto;
+		gap: 10px;
+		align-items: center;
+		padding: 3px 0;
+		border-radius: 4px;
+
+		&:hover {
+			background: var(--md-info-bg);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--md-accent);
+			outline-offset: 1px;
+		}
+	}
+
+	.md-chart__label {
+		overflow: hidden;
+		color: var(--md-muted);
+		font-size: 12px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.md-chart__track {
+		height: 14px;
+		border-radius: 0 4px 4px 0;
+		background: var(--md-chart-track);
+	}
+
+	.md-chart__bar {
+		display: block;
+		height: 100%;
+		border-radius: 0 4px 4px 0;
+		background: var(--md-chart-bar);
+	}
+
+	.md-chart__value {
+		color: var(--md-text);
+		font-size: 12px;
+		font-variant-numeric: tabular-nums;
+		text-align: right;
+	}
+
+	.md-chart__table {
+		width: 100%;
+		border-collapse: collapse;
+
+		th,
+		td {
+			padding: 6px 8px;
+			border-bottom: 1px solid var(--md-border);
+			text-align: left;
+		}
+
+		th {
+			color: var(--md-muted);
+			font-size: 12px;
+		}
+	}
+
+	// --------------------------------------------------------------- builder
+
+	.md-builder__bar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+		align-items: flex-end;
+		margin-bottom: 8px;
+		padding: 12px 14px;
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius);
+		background: var(--md-surface);
+	}
+
+	.md-builder__actions {
+		display: flex;
+		gap: 8px;
+		margin-left: auto;
+	}
+
+	.md-builder__dirty {
+		margin: 0 0 12px;
+		color: var(--md-warn);
+		font-size: 12px;
+	}
+
+	.md-builder__hint {
+		color: var(--md-muted);
+		font-size: 12px;
+	}
+
+	.md-builder__body {
+		display: grid;
+		grid-template-columns: 220px minmax(0, 1fr) 260px;
+		gap: 12px;
+		align-items: start;
+	}
+
+	@media (max-width: 1200px) {
+		.md-builder__body {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	.md-palette,
+	.md-inspector {
+		padding: 12px;
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius);
+		background: var(--md-surface);
+		box-shadow: var(--md-shadow);
+	}
+
+	.md-palette__title,
+	.md-inspector__header h2 {
+		margin: 0 0 8px;
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.md-palette__group {
+		margin-bottom: 12px;
+
+		h3 {
+			margin: 0 0 4px;
+			color: var(--md-muted);
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: .04em;
+		}
+
+		ul {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+	}
+
+	.md-palette__item {
+		display: block;
+		width: 100%;
+		margin-bottom: 4px;
+		padding: 7px 9px;
+		border: 1px solid var(--md-border);
+		border-radius: 6px;
+		background: none;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+
+		strong {
+			display: block;
+			font-size: 12px;
+		}
+
+		span {
+			display: block;
+			margin-top: 2px;
+			color: var(--md-muted);
+			font-size: 11px;
+			line-height: 1.4;
+		}
+
+		&:hover {
+			border-color: var(--md-accent);
+			background: var(--md-info-bg);
+		}
+	}
+
+	.md-inspector__description,
+	.md-inspector__empty {
+		margin: 0 0 10px;
+		color: var(--md-muted);
+		font-size: 12px;
+	}
+
+	.md-inspector .md-field {
+		margin-bottom: 10px;
+	}
+
+	.md-inspector__footer {
+		display: flex;
+		gap: 8px;
+		margin-top: 12px;
+		padding-top: 10px;
+		border-top: 1px solid var(--md-border);
+	}
+
+	.md-danger {
+		color: var(--md-bad);
+	}
+
+	// ---------------------------------------------------------------- canvas
+
+	.md-canvas {
+		min-height: 200px;
+		padding: 10px;
+		border: 1px dashed var(--md-border);
+		border-radius: var(--md-radius);
+	}
+
+	.md-canvas__empty {
+		margin: 0;
+		padding: 40px 12px;
+		color: var(--md-muted);
+		text-align: center;
+	}
+
+	.md-canvas__cell {
+		border: 1px solid transparent;
+		border-radius: var(--md-radius);
+
+		&.is-selected {
+			border-color: var(--md-accent);
+			box-shadow: 0 0 0 1px var(--md-accent);
+		}
+
+		&.is-dragging {
+			opacity: .6;
+			z-index: 1;
+		}
+	}
+
+	.md-canvas__chrome {
+		display: flex;
+		gap: 4px;
+		align-items: stretch;
+		margin-bottom: 4px;
+	}
+
+	.md-canvas__handle {
+		padding: 2px 6px;
+		border: 1px solid var(--md-border);
+		border-radius: 4px;
+		background: var(--md-surface);
+		color: var(--md-muted);
+		cursor: grab;
+		touch-action: none;
+
+		&:active {
+			cursor: grabbing;
+		}
+	}
+
+	.md-canvas__select {
+		display: flex;
+		flex: 1 1 auto;
+		gap: 8px;
+		align-items: center;
+		justify-content: space-between;
+		min-width: 0;
+		padding: 2px 8px;
+		border: 1px solid var(--md-border);
+		border-radius: 4px;
+		background: var(--md-surface);
+		color: var(--md-muted);
+		font-size: 11px;
+		text-align: left;
+		cursor: pointer;
+
+		&[aria-pressed='true'] {
+			border-color: var(--md-accent);
+			color: var(--md-accent);
+		}
+	}
+
+	.md-canvas__width {
+		font-variant-numeric: tabular-nums;
+	}
+
+	// On the canvas a block is something you arrange, not something you operate.
+	.md-canvas__preview {
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.md-assignments {
+		margin-top: 16px;
+	}
+
+	.md-assignments__actions {
+		margin: 0;
+		padding: 0 16px 16px;
+	}
+
 	@media (max-width: 960px) {
 		.md-body {
 			flex-direction: column;
@@ -676,5 +1093,7 @@
 		--md-good-bg: #1f3a30;
 		--md-warn-bg: #3d3320;
 		--md-bad-bg: #3d2426;
+		--md-chart-bar: #3987e5;
+		--md-chart-track: #2c3238;
 	}
 }
