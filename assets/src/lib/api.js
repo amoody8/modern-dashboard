@@ -72,4 +72,11 @@ export const api = {
 
 	saveAssignments: ( data ) =>
 		apiFetch( { path: 'templates/assignments', method: 'POST', data } ),
+
+	menu: () => apiFetch( { path: 'menu' } ),
+
+	saveMenu: ( data ) => apiFetch( { path: 'menu', method: 'POST', data } ),
+
+	resetMenuCatalogue: () =>
+		apiFetch( { path: 'menu/catalogue', method: 'DELETE' } ),
 };

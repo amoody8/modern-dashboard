@@ -1060,6 +1060,81 @@
 		padding: 0 16px 16px;
 	}
 
+	// ------------------------------------------------------------ menu editor
+
+	.md-menu-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.md-menu-row {
+		margin-bottom: 4px;
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius);
+		background: var(--md-surface);
+
+		&.is-dragging {
+			opacity: .6;
+		}
+
+		// A hidden item stays visible in the editor but reads as switched off,
+		// so the list still shows the whole menu you are editing.
+		&.is-hidden .md-menu-row__label,
+		&.is-hidden .md-menu-row__slug {
+			opacity: .5;
+		}
+	}
+
+	.md-menu-row__main {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		align-items: center;
+		padding: 7px 10px;
+	}
+
+	.md-show-toggle {
+		display: flex;
+		align-items: center;
+	}
+
+	.md-menu-row__label {
+		flex: 1 1 180px;
+		min-width: 0;
+	}
+
+	.md-menu-row__slug {
+		overflow: hidden;
+		max-width: 220px;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: var(--md-chart-track);
+		color: var(--md-muted);
+		font-size: 11px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.md-menu-row__expand {
+		font-size: 12px;
+		white-space: nowrap;
+	}
+
+	.md-menu-children {
+		margin: 0;
+		padding: 0 10px 8px 44px;
+		list-style: none;
+
+		li {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			align-items: center;
+			padding: 4px 0;
+		}
+	}
+
 	@media (max-width: 960px) {
 		.md-body {
 			flex-direction: column;

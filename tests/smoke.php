@@ -25,6 +25,7 @@ function get_network_option( $n, $key, $default = false ) {
 	return $GLOBALS['net_options'][ $key ] ?? $default;
 }
 function update_network_option( $n, $key, $value ) {
+	$GLOBALS['net_writes'] = ( $GLOBALS['net_writes'] ?? 0 ) + 1;
 	$GLOBALS['net_options'][ $key ] = $value;
 	return true;
 }
@@ -49,6 +50,10 @@ function sanitize_textarea_field( $t ) { return trim( strip_tags( (string) $t ) 
 function wp_rand( $min = 0, $max = PHP_INT_MAX ) { return random_int( $min, min( $max, PHP_INT_MAX ) ); }
 function translate_user_role( $r ) { return $r; }
 function is_multisite() { return true; }
+function is_network_admin() { return $GLOBALS['is_network_admin'] ?? false; }
+function is_user_admin() { return false; }
+function wp_strip_all_tags( $t ) { return trim( strip_tags( (string) $t ) ); }
+function wp_json_encode( $d ) { return json_encode( $d ); }
 function is_super_admin( $id = 0 ) { return in_array( (int) $id, $GLOBALS['super_admins'] ?? array(), true ); }
 function wp_get_current_user() { return $GLOBALS['current_user'] ?? null; }
 function is_wp_error( $t ) { return $t instanceof WP_Error; }
@@ -310,6 +315,134 @@ check( 'template list shrinks', count( $templates->all() ), 1 );
 
 $last = $templates->delete( 'ops' );
 check( 'refuses to delete the only remaining template', is_wp_error( $last ) ? $last->get_error_code() : 'no error', 'modern_dashboard_default_template' );
+
+// --- MenuRules -------------------------------------------------------------
+
+echo "\nMenuRules\n";
+
+$GLOBALS['net_options'] = array();
+$menu_rules = new ModernDashboard\Menu\MenuRules();
+
+$clean_rules = $menu_rules->sanitize(
+	array(
+		'enabled'             => 1,
+		'exempt_super_admins' => 0,
+		'roles'               => array(
+			'editor' => array(
+				// Real menu slugs carry query strings; sanitize_key would destroy them.
+				'hidden'   => array( 'edit.php?post_type=page', 'tools.php', 'tools.php', '<script>x</script>' ),
+				'renamed'  => array( 'edit.php' => '  <b>Articles</b>  ', 'upload.php' => '' ),
+				'order'    => array( 'index.php', 'edit.php' ),
+				'submenus' => array(
+					'edit.php'  => array( 'hidden' => array( 'edit-tags.php?taxonomy=post_tag' ) ),
+					'empty.php' => array( 'hidden' => array(), 'renamed' => array() ),
+				),
+			),
+			''       => array( 'hidden' => array( 'x' ) ),
+		),
+	)
+);
+
+$editor_rules = $clean_rules['roles']['editor'];
+
+check( 'enabled coerced to bool', $clean_rules['enabled'], true );
+check( 'exemption coerced to bool', $clean_rules['exempt_super_admins'], false );
+check( 'query-string slug preserved', in_array( 'edit.php?post_type=page', $editor_rules['hidden'], true ), true );
+check( 'duplicate slugs deduped', count( $editor_rules['hidden'] ), 3 );
+// `/` is legal in a menu slug, so the payload becomes "scriptx/script"; what
+// matters is that no angle brackets survive anywhere in the list.
+check( 'angle brackets stripped from slugs', preg_match( '/[<>]/', implode( '', $editor_rules['hidden'] ) ), 0 );
+check( 'rename tags stripped and trimmed', $editor_rules['renamed']['edit.php'], 'Articles' );
+check( 'empty rename dropped', array_key_exists( 'upload.php', $editor_rules['renamed'] ), false );
+check( 'submenu rule kept', $editor_rules['submenus']['edit.php']['hidden'][0], 'edit-tags.php?taxonomy=post_tag' );
+check( 'empty submenu entry dropped', array_key_exists( 'empty.php', $editor_rules['submenus'] ), false );
+check( 'blank role dropped', array_key_exists( '', $clean_rules['roles'] ), false );
+
+$flooded = $menu_rules->sanitize(
+	array( 'roles' => array( 'editor' => array( 'hidden' => array_map( 'strval', range( 1, 500 ) ) ) ) )
+);
+check( 'hidden list capped', count( $flooded['roles']['editor']['hidden'] ), 200 );
+
+$GLOBALS['super_admins'] = array( 1 );
+$menu_rules->save( $clean_rules );
+
+$GLOBALS['current_user'] = new WP_User( 5, array( 'editor' ) );
+check( 'editor gets its rules', $menu_rules->resolve_for_user()['hidden'][1], 'tools.php' );
+
+$GLOBALS['current_user'] = new WP_User( 5, array( 'author' ) );
+check( 'unmatched role gets nothing', $menu_rules->resolve_for_user(), null );
+
+$menu_rules->save( array_merge( $clean_rules, array( 'enabled' => false ) ) );
+$GLOBALS['current_user'] = new WP_User( 5, array( 'editor' ) );
+check( 'disabled means no rules at all', $menu_rules->resolve_for_user(), null );
+
+// A network admin who hid their own way back must not be locked out.
+$menu_rules->save(
+	array(
+		'enabled'             => true,
+		'exempt_super_admins' => true,
+		'roles'               => array( 'administrator' => array( 'hidden' => array( 'tools.php' ) ) ),
+	)
+);
+$GLOBALS['current_user'] = new WP_User( 1, array( 'administrator' ) );
+check( 'super admin exempt by default', $menu_rules->resolve_for_user(), null );
+
+$menu_rules->save(
+	array(
+		'enabled'             => true,
+		'exempt_super_admins' => false,
+		'roles'               => array( 'administrator' => array( 'hidden' => array( 'tools.php' ) ) ),
+	)
+);
+check( 'super admin included when exemption is off', $menu_rules->resolve_for_user()['hidden'][0], 'tools.php' );
+
+// --- MenuCatalogue ---------------------------------------------------------
+
+echo "\nMenuCatalogue\n";
+
+$GLOBALS['net_options']      = array();
+$GLOBALS['is_network_admin'] = false;
+
+$GLOBALS['menu'] = array(
+	2  => array( 'Dashboard', 'read', 'index.php' ),
+	4  => array( 'separator1', 'read', 'separator1' ),
+	20 => array( 'Pages', 'edit_pages', 'edit.php?post_type=page' ),
+	10 => array( 'Plugins <span class="update-plugins count-3"><span class="plugin-count">3</span></span>', 'activate_plugins', 'plugins.php' ),
+);
+$GLOBALS['submenu'] = array(
+	'plugins.php' => array(
+		5 => array( 'Installed Plugins', 'activate_plugins', 'plugins.php' ),
+		10 => array( 'Add New', 'install_plugins', 'plugin-install.php' ),
+	),
+);
+
+$catalogue = new ModernDashboard\Menu\MenuCatalogue();
+$catalogue->capture();
+
+$items = $catalogue->to_rest();
+$slugs = array_column( $items, 'slug' );
+
+check( 'menu items captured', count( $items ), 3 );
+check( 'separators excluded', in_array( 'separator1', $slugs, true ), false );
+check( 'items ordered by menu position', $slugs, array( 'index.php', 'plugins.php', 'edit.php?post_type=page' ) );
+check( 'update-count markup stripped from label', $items[1]['label'], 'Plugins' );
+check( 'submenu items captured', count( $items[1]['children'] ), 2 );
+check( 'capability recorded', $items[1]['capability'], 'activate_plugins' );
+
+$writes_before = $GLOBALS['net_writes'];
+$catalogue->capture();
+check( 'unchanged menu does not rewrite the option', $GLOBALS['net_writes'], $writes_before );
+
+$GLOBALS['menu'][30] = array( 'Tools', 'edit_posts', 'tools.php' );
+$catalogue->capture();
+check( 'a new menu item is picked up', count( $catalogue->to_rest() ), 4 );
+
+$GLOBALS['is_network_admin'] = true;
+$writes_before = $GLOBALS['net_writes'];
+$GLOBALS['menu'][40] = array( 'Network only', 'manage_network', 'network-only.php' );
+$catalogue->capture();
+check( 'network admin menus are never captured', $GLOBALS['net_writes'], $writes_before );
+$GLOBALS['is_network_admin'] = false;
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail === 0 ? 0 : 1 );

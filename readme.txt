@@ -1,10 +1,10 @@
 === Modern Dashboard ===
 Contributors: amoody8
-Tags: multisite, network, dashboard, admin, builder
+Tags: multisite, network, dashboard, admin, menu
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,12 @@ Metrics are never collected during a page load. A background job refreshes the s
 
 Compose the overview from blocks — statistics, a ranked bar chart, the attention list, a site list, network facts, headings and notes. Drag them into place, set each one's width, and save. Blocks flow across a twelve-column grid, so a layout that looks right on a desktop still reads correctly on a phone.
 
+= Menu editor =
+
+Reorder, rename and hide admin menu items — top level and submenus — per role, defined once at the network level and applied on every site.
+
+Hiding a menu item tidies the screen; it does not revoke a capability, and the page stays reachable by URL. Use roles and capabilities for access control. Network admin screens are never modified, super administrators are exempt by default, and any administrator can add ?mdash-menu=off to an admin URL to see the untouched menu, so a bad rule can always be undone.
+
 = Network-controlled =
 
 The network admin sets the collection schedule, builds the dashboards, decides which role sees which one, picks which sites are excluded, and chooses whether site administrators may see their own site's numbers. Individual sites inherit those decisions.
@@ -60,11 +66,21 @@ Collection runs on WP-Cron in batches, never during a page load, and overlapping
 
 Data will not refresh automatically. Use the "Collect a batch now" button, or point a system cron at `wp-cron.php`.
 
+= Does hiding a menu item stop people reaching the page? =
+
+No. It tidies the menu; the page is still reachable by its URL for anyone whose role allows it. Menu rules are presentation, not permissions.
+
 = Can site administrators use it? =
 
 Only if you let them. When enabled, a site administrator sees a read-only view of their own site under **Dashboard → Site Metrics** and nothing about the rest of the network.
 
 == Changelog ==
+
+= 0.3.0 =
+* Added the admin menu editor: drag to reorder, rename and hide menu items per role, submenus included, defined at the network level.
+* The menu catalogue is assembled by observing admin page loads, since WordPress cannot report another site's menu; it is stored once per network keyed by slug rather than once per site.
+* Lockout safeguards: network admin screens are never modified, super administrators are exempt by default, and ?mdash-menu=off restores the untouched menu for any administrator.
+* Menu renames are escaped when written into the menu, which WordPress otherwise prints unescaped.
 
 = 0.2.0 =
 * Added the dashboard builder: drag-to-reorder blocks on a twelve-column grid, per-block settings, and templates assigned by role.

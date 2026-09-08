@@ -123,3 +123,31 @@ export function Checkbox( { label, checked, onChange, disabled = false } ) {
 		</div>
 	);
 }
+
+/**
+ * A checkbox whose label is visually hidden but still bound to it by id, for
+ * dense rows where a visible label would not fit.
+ *
+ * @param {Object}   props          Component props.
+ * @param {string}   props.label    Label text, announced to assistive tech.
+ * @param {boolean}  props.checked  Checked state.
+ * @param {Function} props.onChange Change handler.
+ * @return {JSX.Element} The checkbox.
+ */
+export function ShowToggle( { label, checked, onChange } ) {
+	const id = useId();
+
+	return (
+		<span className="md-show-toggle">
+			<input
+				id={ id }
+				type="checkbox"
+				checked={ checked }
+				onChange={ onChange }
+			/>
+			<label htmlFor={ id } className="screen-reader-text">
+				{ label }
+			</label>
+		</span>
+	);
+}

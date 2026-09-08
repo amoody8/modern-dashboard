@@ -12,10 +12,11 @@ markup, or assets.
 
 ## Status
 
-**v0.2.0 — the network dashboard, plus the builder.** Metrics collection, the
-network overview, the site list with drill-down, network-controlled settings,
-and a drag-and-drop dashboard builder whose templates are assigned by role. The
-menu editor and theming layers are not built yet; see [Roadmap](#roadmap).
+**v0.3.0 — network dashboard, builder, menu editor.** Metrics collection, the
+network overview, the site list with drill-down, network-controlled settings, a
+drag-and-drop dashboard builder whose templates are assigned by role, and a
+network-defined admin menu editor. The theming layer is not built yet; see
+[Roadmap](#roadmap).
 
 ## Requirements
 
@@ -47,6 +48,9 @@ site on demand.
 bar chart, the attention list, a site list, network facts, headings and notes —
 by dragging them into place and setting each one's width. Templates are stored
 at the network level and assigned per role, with a default for everyone else.
+
+**Menu editor.** Reorder, rename and hide admin menu items per role, defined
+once at the network level and applied on every site. Submenus too.
 
 **Network-controlled settings.** Collection interval and batch size, storage
 scanning on/off with a per-site time budget, staleness and inactivity
@@ -125,6 +129,48 @@ the plugin's WordPress-admin accent `#2271b1` passes contrast on the light
 surface but measures **2.88:1** on the dark one, under the 3:1 floor. Dark mode
 therefore steps to `#3987e5`. Both live in `--md-chart-bar`.
 
+### The menu catalogue is observed, not enumerated
+
+WordPress only knows a site's admin menu while that site is rendering an admin
+page: `$menu` is assembled by whichever plugins are active there, so it cannot be
+read for another site through `switch_to_blog()`. There is no API that answers
+"what is in site 47's menu?" from outside site 47.
+
+So the catalogue is built by observation. Every admin page load contributes what
+that site has, merged into one network-level record keyed by slug — which means
+it grows with the number of distinct menu items (tens) rather than the number of
+sites (possibly thousands). Writes only happen when the menu's signature actually
+changes, so the common case is a read. Merging is additive and converges: a lost
+concurrent write is repaired by the next page load. Items unseen for 30 days are
+pruned, so uninstalled plugins fade out on their own.
+
+The consequence worth knowing: a freshly installed network shows an empty
+catalogue until somebody visits a site's admin. The editor says so rather than
+looking broken.
+
+### Menu rules cannot lock you out
+
+A menu editor can hide the screen you would use to undo your mistake. Three
+safeguards, in order of how much they matter:
+
+1. **Network admin screens are never modified.** This editor and the network
+   dashboard are always reachable, whatever the rules say.
+2. **Super administrators are exempt by default.** Switchable, but on unless you
+   turn it off.
+3. **`?mdash-menu=off` restores the untouched menu** for anyone who can
+   `manage_options` — the recovery route for a site administrator given rules
+   that hide too much. An admin notice says when it is active.
+
+**Hiding a menu item is cosmetic.** It does not revoke a capability, and the page
+stays reachable by URL for anyone whose role allows it. This is a tidying tool,
+not an access-control one — use roles and capabilities for that. The editor says
+this on screen too, because it is the kind of thing people assume the other way
+round.
+
+Renames are escaped on the way into the menu. WordPress treats menu titles as
+trusted markup authored by plugin code and prints them without escaping, so a
+stored label would otherwise be an injection point.
+
 ### Capabilities
 
 Granted dynamically through `user_has_cap`, not written into roles — roles live
@@ -151,6 +197,10 @@ src/
     BlockRegistry.php         Block catalogue: labels, schemas, width bounds
     LayoutSanitizer.php       Validates untrusted templates against the registry
     TemplateRepository.php    Template storage, role assignment, resolution
+  Menu/
+    MenuCatalogue.php         Observes admin menus and merges them network-wide
+    MenuRules.php             Per-role hide/rename/order rules
+    MenuApplier.php           Applies rules, with the lockout safeguards
   Data/
     Store.php                 Site meta or network options, plus the staleness index
     SiteCollector.php         switch_to_blog orchestration
@@ -160,10 +210,12 @@ src/
   Cron/Scheduler.php          Batched background refresh
   Rest/Routes.php             modern-dashboard/v1
   Rest/BuilderRoutes.php      Builder endpoints in the same namespace
+  Rest/MenuRoutes.php         Menu catalogue and rules endpoints
   Admin/                      Menu pages and asset loading
 assets/src/                   React app (source)
   blocks/                     One renderer per block type
   builder/                    Canvas, palette, inspector, role assignment
+  menu/                       Menu editor
 build/                        React app (built, committed so the repo installs as-is)
 ```
 
@@ -195,6 +247,8 @@ when the network allows it.
 | `/templates/active` | GET | The template the current user should see |
 | `/templates/{id}` | GET / DELETE | Read or remove one template |
 | `/templates/assignments` | POST | Set the role map and the default template |
+| `/menu` | GET / POST | The observed menu catalogue and the per-role rules |
+| `/menu/catalogue` | DELETE | Clear the catalogue so it rebuilds from scratch |
 
 ## Extending
 
@@ -285,6 +339,12 @@ composer lint:fix      # phpcbf
   deliberately separate.
 - **Blocks are reordered, not freely positioned.** See the note above; this is a
   deliberate trade, not a missing feature.
+- **The menu catalogue starts empty** and fills in as admin pages are visited.
+  There is no way to enumerate another site's menu ahead of time; see above.
+- **Menu hiding is cosmetic, not a permission boundary.** Stated here because it
+  is the most likely thing to be misread as security.
+- **A custom menu order drops separators.** Their positions stop meaning anything
+  once the items around them have moved.
 
 ## Roadmap
 
@@ -292,13 +352,12 @@ Ordered by what a network actually needs next, not by UiPress feature order.
 
 1. **Per-site dashboards** — let a network template replace each site's own
    `index.php`, so site admins land on a dashboard the network authored.
-2. **Menu editor** — network-defined admin menus with per-role visibility.
-3. **Theming / white-label** — admin chrome, colours, login screen, per-site
+2. **Theming / white-label** — admin chrome, colours, login screen, per-site
    branding controlled from the network.
-4. **Historical trends** — the collector already timestamps everything; keeping
+3. **Historical trends** — the collector already timestamps everything; keeping
    snapshots turns the current point-in-time numbers into graphs, and gives the
    chart block something to plot over time.
-5. **Bulk actions** — act on filtered site sets (update plugins, archive
+4. **Bulk actions** — act on filtered site sets (update plugins, archive
    inactive sites) from the site list.
 
 ## Licence

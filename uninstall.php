@@ -21,6 +21,8 @@ use ModernDashboard\Builder\TemplateRepository;
 use ModernDashboard\Cron\Scheduler;
 use ModernDashboard\Data\NetworkAggregator;
 use ModernDashboard\Data\Store;
+use ModernDashboard\Menu\MenuCatalogue;
+use ModernDashboard\Menu\MenuRules;
 use ModernDashboard\Settings\Settings;
 
 wp_clear_scheduled_hook( Scheduler::HOOK );
@@ -52,6 +54,8 @@ foreach ( (array) $modern_dashboard_site_ids as $modern_dashboard_site_id ) {
 
 delete_network_option( null, Settings::OPTION );
 delete_network_option( null, TemplateRepository::OPTION );
+delete_network_option( null, MenuCatalogue::OPTION );
+delete_network_option( null, MenuRules::OPTION );
 delete_network_option( null, Store::INDEX_OPTION );
 delete_network_option( null, Scheduler::LAST_RUN );
 

@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import Builder from '../builder/Builder';
+import MenuEditor from '../menu/MenuEditor';
 import DashboardRenderer from './DashboardRenderer';
 import SettingsPanel from './SettingsPanel';
 import SiteDetail from './SiteDetail';
@@ -23,6 +24,11 @@ const TABS = () => [
 	{
 		key: 'builder',
 		label: __( 'Builder', 'modern-dashboard' ),
+		manage: true,
+	},
+	{
+		key: 'menus',
+		label: __( 'Menus', 'modern-dashboard' ),
 		manage: true,
 	},
 	{
@@ -229,6 +235,8 @@ export default function App() {
 					{ tab === 'builder' && canManage && (
 						<Builder overview={ overview } />
 					) }
+
+					{ tab === 'menus' && canManage && <MenuEditor /> }
 
 					{ tab === 'settings' && canManage && (
 						<SettingsPanel

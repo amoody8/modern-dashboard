@@ -19,7 +19,11 @@ use ModernDashboard\Data\MetricsRepository;
 use ModernDashboard\Data\NetworkAggregator;
 use ModernDashboard\Data\SiteCollector;
 use ModernDashboard\Data\Store;
+use ModernDashboard\Menu\MenuApplier;
+use ModernDashboard\Menu\MenuCatalogue;
+use ModernDashboard\Menu\MenuRules;
 use ModernDashboard\Rest\BuilderRoutes;
+use ModernDashboard\Rest\MenuRoutes;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
 use ModernDashboard\Support\Capabilities;
@@ -38,6 +42,8 @@ final class Plugin {
 	private ?NetworkAggregator $aggregate  = null;
 	private ?BlockRegistry $registry       = null;
 	private ?TemplateRepository $templates = null;
+	private ?MenuCatalogue $catalogue      = null;
+	private ?MenuRules $menu_rules         = null;
 
 	public function __construct( string $file, string $version ) {
 		$this->file    = $file;
@@ -80,6 +86,14 @@ final class Plugin {
 		return $this->registry ??= new BlockRegistry();
 	}
 
+	public function catalogue(): MenuCatalogue {
+		return $this->catalogue ??= new MenuCatalogue();
+	}
+
+	public function menu_rules(): MenuRules {
+		return $this->menu_rules ??= new MenuRules();
+	}
+
 	public function templates(): TemplateRepository {
 		return $this->templates ??= new TemplateRepository(
 			$this->registry(),
@@ -105,6 +119,9 @@ final class Plugin {
 		( new Scheduler( $this->repository(), $this->settings() ) )->register();
 		( new Routes( $this->repository(), $this->aggregator(), $this->settings() ) )->register();
 		( new BuilderRoutes( $this->registry(), $this->templates() ) )->register();
+		( new MenuRoutes( $this->catalogue(), $this->menu_rules(), $this->templates() ) )->register();
+		$this->catalogue()->register();
+		( new MenuApplier( $this->menu_rules() ) )->register();
 		( new NetworkAdminPage() )->register();
 		( new Assets( $this ) )->register();
 
