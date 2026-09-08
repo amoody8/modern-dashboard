@@ -1,0 +1,27 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"landingPage": "/wp-admin/network/admin.php?page=modern-dashboard",
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": true
+	},
+	"steps": [
+		{ "step": "login" },
+		{ "step": "enableMultisite" },
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "url",
+				"url": "https://amoody8.github.io/modern-dashboard/modern-dashboard.zip"
+			},
+			"options": { "activate": false }
+		},
+		{ "step": "wp-cli", "command": "wp plugin activate modern-dashboard --network" },
+		{ "step": "wp-cli", "command": "wp site create --slug=alpha --title=Alpha" },
+		{ "step": "wp-cli", "command": "wp site create --slug=beta --title=Beta" },
+		{ "step": "wp-cli", "command": "wp site create --slug=gamma --title=Gamma" }
+	]
+}

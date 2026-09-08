@@ -351,6 +351,74 @@ The matching React renderer is registered in `assets/src/blocks/index.js`. A typ
 with no renderer shows a visible placeholder rather than empty space — a missing
 renderer should be obvious, not silent.
 
+## Testing it
+
+The plugin needs PHP, a database, and a **network-activated Multisite** install.
+Static hosting (GitHub Pages and friends) cannot run it — but Pages can host the
+zip that boots it in a browser-based WordPress, which is what the Playground
+option below does.
+
+### Local Multisite (recommended)
+
+`wp-env` is WordPress's own Docker-based environment. The config here sets
+`multisite: true`, and the setup script network-activates the plugin and creates
+a few sites — one-site networks exercise almost none of the interesting paths.
+
+```bash
+npm install
+npm run build
+npm run env:start     # boots WordPress in Docker
+npm run env:setup     # network-activates the plugin, creates 3 test sites
+```
+
+Then open <http://localhost:8888/wp-admin/network/admin.php?page=modern-dashboard>
+and log in as `admin` / `password`. `npm run env:destroy` throws it all away.
+
+`wp-env` activates listed plugins on the main site only, which is why the setup
+script exists: this plugin refuses to run unless it is *network*-activated, and
+says so in an admin notice.
+
+### In the browser, with no install at all
+
+[WordPress Playground](https://playground.wordpress.net) runs WordPress in the
+browser — PHP compiled to WebAssembly, SQLite instead of MySQL — and its
+`enableMultisite` step makes a network. `.playground/blueprint.json` installs
+this plugin from a published zip, network-activates it and creates three sites.
+The Pages workflow publishes the zip, the Blueprint and a launch page, so a
+single link boots the whole thing.
+
+Enable it under **Settings → Pages → Source: GitHub Actions**; the workflow does
+the rest.
+
+**What Playground proves, and what it does not.** It exercises the UI, the REST
+API and the plugin's wiring end to end, which is genuinely useful. It cannot
+tell you about:
+
+- **scale** — three sites is not three thousand, and the batching, caching and
+  query-priming exist entirely for the second case;
+- **real menus** — the menu catalogue only ever sees the plugins installed there;
+- **scheduled collection** — there is no real cron, so use *Collect a batch now*;
+- **storage** — directory sizes on a virtual filesystem are meaningless.
+
+Treat it as a demo and a UI test, not as evidence the plugin is production-ready
+on a real network.
+
+### What to check first, in order
+
+Branding and menu rules change what other people see, so prove the read-only
+parts before switching either on.
+
+1. **Collection.** Press *Collect a batch now*. Every site should get numbers,
+   and *Data freshness* should stop reporting uncollected sites.
+2. **Drill-down.** Open a site from the list. Check the plugin/theme figures
+   against that site's own Plugins screen.
+3. **Builder.** Rearrange the overview, save, reload. The layout should persist
+   and the Overview tab should match the canvas.
+4. **Menus** — with a throwaway role first. Hide something for `editor`, log in
+   as an editor, confirm it is gone and that `?mdash-menu=off` brings it back.
+5. **Branding** — last, and check `?mdash-theme=off` works *before* you rely on
+   it.
+
 ## Development
 
 ```bash
@@ -361,6 +429,8 @@ npm run lint:js        # ESLint + Prettier (@wordpress/scripts)
 npm run format         # autoformat
 
 npm test               # node --test: contrast maths
+npm run env:start      # WordPress Multisite in Docker (see Testing it)
+npm run env:cli -- ...  # run WP-CLI against it
 
 composer install
 composer lint          # phpcs (WordPress-Extra + Docs + PHPCompatibility)

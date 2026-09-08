@@ -1,0 +1,105 @@
+name: Playground demo
+
+# Publishes the built plugin, a Blueprint and a launch page to GitHub Pages, so
+# the plugin can be booted in WordPress Playground straight from a URL.
+#
+# Pages cannot run PHP; it only hosts the zip. Playground runs WordPress itself
+# in the browser (PHP compiled to WebAssembly, SQLite for the database) and
+# installs the plugin from the published URL.
+#
+# Requires: repository Settings → Pages → Source = "GitHub Actions".
+
+on:
+  push:
+    branches: [ claude/uipress-multisite-wordpress-rz1062 ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Assemble the plugin zip
+        run: |
+          set -euo pipefail
+          mkdir -p dist/modern-dashboard public
+          cp -r src build dist/modern-dashboard/
+          cp modern-dashboard.php uninstall.php readme.txt dist/modern-dashboard/
+          if [ -d languages ]; then cp -r languages dist/modern-dashboard/; fi
+          ( cd dist && zip -qr ../public/modern-dashboard.zip modern-dashboard )
+          unzip -l public/modern-dashboard.zip | tail -5
+
+      - name: Publish the Blueprint and a launch page
+        run: |
+          mkdir -p public
+          cp .playground/blueprint.json public/blueprint.json
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Modern Dashboard — Playground demo</title>
+          <style>
+            :root { color-scheme: light dark }
+            body { margin:0; min-height:100vh; display:grid; place-items:center;
+                   font:16px/1.6 system-ui,sans-serif; padding:24px }
+            main { max-width:44rem }
+            h1 { font-size:1.6rem; margin:0 0 .4rem }
+            p { margin:0 0 1rem }
+            a.cta { display:inline-block; padding:.7rem 1.2rem; border-radius:8px;
+                    background:#2271b1; color:#fff; text-decoration:none; font-weight:600 }
+            ul { padding-left:1.2rem }
+            code { font-size:.9em }
+          </style>
+          <main>
+            <h1>Modern Dashboard</h1>
+            <p>A network-first admin dashboard for WordPress Multisite. This link boots a
+               throwaway Multisite network in your browser with the plugin network-activated
+               and three test sites.</p>
+            <p><a class="cta" href="https://playground.wordpress.net/?blueprint-url=https://amoody8.github.io/modern-dashboard/blueprint.json">Launch the demo</a></p>
+            <p>It takes a few seconds to boot. Everything runs locally in the browser and
+               disappears when you close the tab.</p>
+            <p><strong>What this demo does and does not show.</strong> It exercises the UI,
+               the REST API and the plugin's wiring. It cannot tell you about:</p>
+            <ul>
+              <li>behaviour at scale — three sites is not three thousand;</li>
+              <li>real plugin menus, since the menu catalogue only sees what is installed here;</li>
+              <li>scheduled collection, as there is no real cron — use <em>Collect a batch now</em>;</li>
+              <li>storage figures, which are meaningless on a virtual filesystem.</li>
+            </ul>
+            <p><a href="https://github.com/amoody8/modern-dashboard">Source on GitHub</a> ·
+               <a href="modern-dashboard.zip">Download the plugin zip</a></p>
+          </main>
+          HTML
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
