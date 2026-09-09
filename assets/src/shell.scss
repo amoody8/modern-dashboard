@@ -9,7 +9,7 @@
 // hierarchy from weight and space rather than from boxes and rules.
 
 body.mds-shell {
-	--mds-rail-w: 208px;
+	--mds-rail-w: 210px;
 	--mds-top-h: 56px;
 
 	// Core's chrome, gone. Not `display: none` on #wpadminbar alone — core
@@ -71,14 +71,60 @@ html.wp-toolbar:has(body.mds-shell) {
 .mds-nav__site {
 	display: flex;
 	align-items: center;
-	gap: 9px;
-	padding: 6px;
-	border-radius: 8px;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 6px 8px;
+	border-radius: var(--mds-radius-sm);
 	text-decoration: none;
 	color: var(--mds-text);
 
 	&:hover { background: var(--mds-hover); }
 	&:focus-visible { outline: 2px solid var(--mds-accent); outline-offset: -2px; }
+}
+
+.mds-nav__wordmark {
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	color: var(--mds-text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.mds-nav__scope {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--mds-muted);
+	border: 1px solid var(--mds-border);
+	border-radius: 4px;
+	padding: 1px 5px;
+}
+
+.mds-nav__cluster {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+
+	// Whitespace is the only separator between clusters — the reference uses
+	// no rules or headings, which is what keeps the rail quiet.
+	& + .mds-nav__cluster {
+		margin-top: 18px;
+	}
+}
+
+.mds-icon {
+	flex: 0 0 auto;
+	width: 16px;
+	height: 16px;
+	color: var(--mds-muted);
+}
+
+.mds-icon--dashicon {
+	font-size: 16px;
+	line-height: 16px;
 }
 
 .mds-nav__mark {
@@ -154,9 +200,8 @@ html.wp-toolbar:has(body.mds-shell) {
 }
 
 .mds-nav__list {
-	list-style: none;
 	margin: 0;
-	padding: 4px 8px 16px;
+	padding: 4px 8px 20px;
 	overflow-y: auto;
 	flex: 1 1 auto;
 }
@@ -178,14 +223,14 @@ html.wp-toolbar:has(body.mds-shell) {
 
 	&:focus-visible { outline: 2px solid var(--mds-accent); outline-offset: -2px; }
 
+	&:hover .mds-icon { color: var(--mds-text-soft); }
+
 	&.is-current {
 		background: var(--mds-hover);
 		color: var(--mds-text);
 		font-weight: 600;
 
-		.mds-nav__icon {
-			color: var(--mds-text);
-		}
+		.mds-icon { color: var(--mds-text); }
 	}
 }
 

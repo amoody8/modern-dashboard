@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { navIcon } from './icons';
 
 /**
  * @param {Object}   props           Component props.
@@ -85,6 +86,11 @@ export default function Sidebar( {
 
 	const filtering = '' !== filter.trim();
 
+	// The reference separates clusters with space rather than headings. Groups
+	// are derived from slugs so an unknown plugin lands in the trailing group
+	// instead of being mixed into core's.
+	const grouped = useMemo( () => groupItems( visible ), [ visible ] );
+
 	return (
 		<nav
 			className="mds-nav"
@@ -92,17 +98,12 @@ export default function Sidebar( {
 		>
 			<div className="mds-nav__brand">
 				<a className="mds-nav__site" href={ links.siteHome }>
-					<span className="mds-nav__mark" aria-hidden="true">
-						{ ( siteName || 'W' ).trim().charAt( 0 ).toUpperCase() }
-					</span>
-					<span className="mds-nav__site-text">
-						<span className="mds-nav__site-name">{ siteName }</span>
-						<span className="mds-nav__site-role">
-							{ isNetwork
-								? __( 'Network admin', 'modern-dashboard' )
-								: __( 'Site admin', 'modern-dashboard' ) }
+					<span className="mds-nav__wordmark">{ siteName }</span>
+					{ isNetwork && (
+						<span className="mds-nav__scope">
+							{ __( 'Network', 'modern-dashboard' ) }
 						</span>
-					</span>
+					) }
 				</a>
 			</div>
 
@@ -129,66 +130,77 @@ export default function Sidebar( {
 				) }
 			</div>
 
-			<ul className="mds-nav__list">
-				{ visible.map( ( item ) => {
-					const isCurrent = isActive( item, current );
-					const expanded =
-						filtering || open === item.slug || isCurrent;
+			<div className="mds-nav__list">
+				{ grouped.map( ( group, index ) => (
+					<ul key={ index } className="mds-nav__cluster">
+						{ group.map( ( item ) => {
+							const isCurrent = isActive( item, current );
+							const expanded =
+								filtering || open === item.slug || isCurrent;
 
-					return (
-						<li key={ item.slug } className="mds-nav__group">
-							<a
-								href={ item.url }
-								className={ `mds-nav__item${
-									isCurrent ? ' is-current' : ''
-								}` }
-								aria-current={ isCurrent ? 'page' : undefined }
-								onClick={ ( event ) => {
-									// A parent with children reveals them on first
-									// click rather than navigating away from a list
-									// the user is still choosing from.
-									if ( item.children.length && ! expanded ) {
-										event.preventDefault();
-										setOpen( item.slug );
-									}
-								} }
-							>
-								<span
-									className={ `mds-nav__icon dashicons dashicons-${ item.icon }` }
-									aria-hidden="true"
-								/>
-								<span className="mds-nav__label">
-									{ item.label }
-								</span>
-							</a>
+							return (
+								<li
+									key={ item.slug }
+									className="mds-nav__group"
+								>
+									<a
+										href={ item.url }
+										className={ `mds-nav__item${
+											isCurrent ? ' is-current' : ''
+										}` }
+										aria-current={
+											isCurrent ? 'page' : undefined
+										}
+										onClick={ ( event ) => {
+											// A parent with children reveals them on first
+											// click rather than navigating away from a list
+											// the user is still choosing from.
+											if (
+												item.children.length &&
+												! expanded
+											) {
+												event.preventDefault();
+												setOpen( item.slug );
+											}
+										} }
+									>
+										{ navIcon( item.icon ) }
+										<span className="mds-nav__label">
+											{ item.label }
+										</span>
+									</a>
 
-							{ expanded && item.children.length > 0 && (
-								<ul className="mds-nav__sub">
-									{ item.children.map( ( child ) => (
-										<li key={ child.slug }>
-											<a
-												href={ child.url }
-												className={ `mds-nav__subitem${
-													child.slug === current
-														? ' is-current'
-														: ''
-												}` }
-												aria-current={
-													child.slug === current
-														? 'page'
-														: undefined
-												}
-											>
-												{ child.label }
-											</a>
-										</li>
-									) ) }
-								</ul>
-							) }
-						</li>
-					);
-				} ) }
-			</ul>
+									{ expanded && item.children.length > 0 && (
+										<ul className="mds-nav__sub">
+											{ item.children.map( ( child ) => (
+												<li key={ child.slug }>
+													<a
+														href={ child.url }
+														className={ `mds-nav__subitem${
+															child.slug ===
+															current
+																? ' is-current'
+																: ''
+														}` }
+														aria-current={
+															child.slug ===
+															current
+																? 'page'
+																: undefined
+														}
+													>
+														{ child.label }
+													</a>
+												</li>
+											) ) }
+										</ul>
+									) }
+								</li>
+							);
+						} ) }
+					</ul>
+				) ) }
+			</div>
 
 			{ filtering && 0 === visible.length && (
 				<p className="mds-nav__empty">
@@ -197,6 +209,33 @@ export default function Sidebar( {
 			) }
 		</nav>
 	);
+}
+
+/** Slugs that open each cluster, in the order the reference shows them. */
+const CLUSTER_STARTS = [ 'edit.php', 'themes.php' ];
+
+/**
+ * Split the menu into whitespace-separated clusters.
+ *
+ * @param {Object[]} items Visible menu items.
+ *
+ * @return {Object[][]} Clusters, empty ones removed.
+ */
+function groupItems( items ) {
+	const clusters = [ [] ];
+
+	items.forEach( ( item ) => {
+		if (
+			CLUSTER_STARTS.includes( item.slug ) &&
+			clusters[ clusters.length - 1 ].length
+		) {
+			clusters.push( [] );
+		}
+
+		clusters[ clusters.length - 1 ].push( item );
+	} );
+
+	return clusters.filter( ( cluster ) => cluster.length > 0 );
 }
 
 /**
