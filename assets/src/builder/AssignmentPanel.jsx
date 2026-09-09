@@ -9,6 +9,7 @@ import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Field } from '../components/Primitives';
 import { api } from '../lib/api';
+import { Panel } from '../components/Surfaces';
 
 const INHERIT = '';
 
@@ -50,11 +51,10 @@ export default function AssignmentPanel( {
 	};
 
 	return (
-		<section className="md-panel md-assignments">
-			<header className="md-panel__header">
-				<h2>{ __( 'Who sees what', 'modern-dashboard' ) }</h2>
-			</header>
-
+		<Panel
+			title={ __( 'Who sees what', 'modern-dashboard' ) }
+			className="md-assignments"
+		>
 			<p className="md-panel__intro">
 				{ __(
 					'Assign a dashboard to a role. Anyone whose role has no assignment gets the default.',
@@ -129,6 +129,6 @@ export default function AssignmentPanel( {
 						: __( 'Save assignments', 'modern-dashboard' ) }
 				</button>
 			</p>
-		</section>
+		</Panel>
 	);
 }

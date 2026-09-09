@@ -27,6 +27,7 @@ import { Checkbox, Field, Notice, Spinner } from '../components/Primitives';
 import SortableMenuRow from './SortableMenuRow';
 import { api } from '../lib/api';
 import { formatRelative } from '../lib/format';
+import { Panel } from '../components/Surfaces';
 
 const EMPTY_RULE = { hidden: [], renamed: {}, order: [], submenus: {} };
 
@@ -292,11 +293,7 @@ export default function MenuEditor() {
 				) }
 			</Notice>
 
-			<section className="md-panel">
-				<header className="md-panel__header">
-					<h2>{ __( 'Menu customisation', 'modern-dashboard' ) }</h2>
-				</header>
-
+			<Panel title={ __( 'Menu customisation', 'modern-dashboard' ) }>
 				<Checkbox
 					label={ __(
 						'Apply menu rules across the network',
@@ -337,7 +334,7 @@ export default function MenuEditor() {
 						bypassArg
 					) }
 				</p>
-			</section>
+			</Panel>
 
 			<div className="md-builder__bar">
 				<Field label={ __( 'Editing rules for', 'modern-dashboard' ) }>

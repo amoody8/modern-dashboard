@@ -12,6 +12,7 @@ import {
 	siteMetricFormatter,
 	siteMetricLabel,
 } from '../lib/metrics';
+import { Panel } from '../components/Surfaces';
 
 export function AttentionBlock( { block, overview, onSelectSite } ) {
 	const settings = block.settings || {};
@@ -20,14 +21,13 @@ export function AttentionBlock( { block, overview, onSelectSite } ) {
 	const labels = attentionLabels();
 
 	return (
-		<section className="md-panel md-panel--flush">
-			<header className="md-panel__header">
-				<h2>
-					{ settings.title ||
-						__( 'Sites needing attention', 'modern-dashboard' ) }
-				</h2>
-			</header>
-
+		<Panel
+			title={
+				settings.title ||
+				__( 'Sites needing attention', 'modern-dashboard' )
+			}
+			flush
+		>
 			{ attention.length === 0 ? (
 				<EmptyState
 					title={ __( 'Everything is quiet', 'modern-dashboard' ) }
@@ -70,7 +70,7 @@ export function AttentionBlock( { block, overview, onSelectSite } ) {
 					) ) }
 				</ul>
 			) }
-		</section>
+		</Panel>
 	);
 }
 
@@ -86,18 +86,17 @@ export function SiteListBlock( { block, onSelectSite } ) {
 	const format = siteMetricFormatter( metric );
 
 	return (
-		<section className="md-panel md-panel--flush">
-			<header className="md-panel__header">
-				<h2>
-					{ settings.title ||
-						sprintf(
-							/* translators: %s: metric name such as "Users" */
-							__( 'Sites by %s', 'modern-dashboard' ),
-							siteMetricLabel( metric ).toLowerCase()
-						) }
-				</h2>
-			</header>
-
+		<Panel
+			title={
+				settings.title ||
+				sprintf(
+					/* translators: %s: metric name such as "Users" */
+					__( 'Sites by %s', 'modern-dashboard' ),
+					siteMetricLabel( metric ).toLowerCase()
+				)
+			}
+			flush
+		>
 			{ loading && <Spinner /> }
 			{ error && (
 				<EmptyState
@@ -135,6 +134,6 @@ export function SiteListBlock( { block, onSelectSite } ) {
 					</tbody>
 				</table>
 			) }
-		</section>
+		</Panel>
 	);
 }

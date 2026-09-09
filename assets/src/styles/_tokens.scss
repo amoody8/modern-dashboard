@@ -1,0 +1,176 @@
+// Design tokens.
+//
+// Every value the interface uses lives here, and nothing outside this file
+// declares a raw colour, radius, or spacing number. That is what makes the
+// system retargetable: the audit log and the role editor inherit the look by
+// using the tokens, not by copying a component's CSS.
+//
+// Scoped to `.modern-dashboard` because WordPress's admin stylesheet is
+// unscoped and would otherwise win on specificity.
+
+.modern-dashboard {
+	// ------------------------------------------------------------- neutrals
+	//
+	// Biased slightly toward the indigo accent rather than a pure grey, so
+	// surfaces and accent read as one family. A pure #808080 next to a
+	// saturated brand always looks like two unrelated decisions.
+
+	--md-bg: #f4f5f8;
+	--md-surface: #ffffff;
+	--md-surface-sunken: #f8f9fb;
+	--md-surface-hover: #f6f7fa;
+	--md-border: #e6e8ee;
+	--md-border-strong: #d3d7e0;
+	--md-text: #14161c;
+	--md-text-soft: #4a4f5c;
+	--md-muted: #6b7280;
+
+	// ---------------------------------------------------------------- brand
+
+	--md-accent: #4b48d6;
+	--md-accent-hover: #3f3cc4;
+	--md-accent-soft: #eeedfc;
+	--md-accent-text: #ffffff;
+
+	// ------------------------------------------------------------- semantic
+	//
+	// Deliberately separate from the accent: "this is fine" and "this is our
+	// brand" are different statements, and a UI that conflates them cannot
+	// show a healthy row without also shouting.
+
+	--md-good: #0d8a5f;
+	--md-good-bg: #e3f5ed;
+	--md-warn: #b26a00;
+	--md-warn-bg: #fdf1dd;
+	--md-bad: #c0392f;
+	--md-bad-bg: #fdecea;
+	--md-info: #2563a8;
+	--md-info-bg: #e8f1fb;
+
+	// ---------------------------------------------------------------- chart
+
+	--md-chart-bar: #4b48d6;
+	--md-chart-track: #edeef3;
+
+	// ------------------------------------------------------------- geometry
+	//
+	// Three radii, used consistently: controls, cards, pills. A fourth value
+	// is nearly always someone eyeballing a one-off.
+
+	--md-radius-sm: 7px;
+	--md-radius: 12px;
+	--md-radius-lg: 14px;
+	--md-radius-pill: 999px;
+
+	// -------------------------------------------------------------- spacing
+	//
+	// A 4px base. Sizes are named by role rather than by number so a change of
+	// density is a change here, not a sweep through every component.
+
+	--md-space-1: 4px;
+	--md-space-2: 8px;
+	--md-space-3: 12px;
+	--md-space-4: 16px;
+	--md-space-5: 20px;
+	--md-space-6: 24px;
+	--md-space-8: 32px;
+
+	// Row padding is its own token because density is the main thing that
+	// differs between a summary surface and a table meant for 500 rows.
+	--md-row-y: 10px;
+	--md-row-x: 16px;
+	--md-cell-lead: 16px;
+
+	// ------------------------------------------------------------ elevation
+	//
+	// Two levels. Cards sit on the tinted ground; overlays sit above
+	// everything. Anything needing a third level is probably nesting cards,
+	// which this system deliberately does not do.
+
+	--md-shadow: 0 1px 2px rgba(16, 18, 26, 0.04), 0 4px 12px rgba(16, 18, 26, 0.03);
+	--md-shadow-lg: 0 10px 32px rgba(16, 18, 26, 0.18), 0 2px 8px rgba(16, 18, 26, 0.1);
+
+	// ----------------------------------------------------------------- type
+	//
+	// Inherits the admin's font stack rather than loading a webfont: a network
+	// admin screen should not pay a font download, and matching the rest of
+	// wp-admin is a feature here rather than a compromise.
+
+	--md-font: inherit;
+	--md-font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+	--md-text-xs: 11px;
+	--md-text-sm: 12px;
+	--md-text-base: 13px;
+	--md-text-md: 14px;
+	--md-text-lg: 16px;
+	--md-text-xl: 20px;
+	--md-text-2xl: 27px;
+
+	--md-weight-normal: 400;
+	--md-weight-medium: 500;
+	--md-weight-semi: 600;
+	--md-weight-bold: 650;
+
+	--md-leading-tight: 1.25;
+	--md-leading: 1.5;
+
+	// --------------------------------------------------------------- layers
+
+	--md-z-sticky: 10;
+	--md-z-scrim: 100000;
+	--md-z-palette: 100001;
+
+	// --------------------------------------------------------------- motion
+	//
+	// Short and unfussy. Motion here confirms an action landed; it is not
+	// decoration, and every use respects prefers-reduced-motion.
+
+	--md-ease: cubic-bezier(0.2, 0, 0.13, 1);
+	--md-duration: 140ms;
+}
+
+// Dark mode.
+//
+// Guarded on both the OS preference and an explicitly dark admin colour
+// scheme, matching what the plugin already did: WordPress users pick a scheme
+// per account, and honouring a dark OS while the admin around us is light
+// would leave this plugin looking broken rather than themed.
+@media (prefers-color-scheme: dark) {
+	body.admin-color-modern .modern-dashboard,
+	body.admin-color-midnight .modern-dashboard {
+		--md-bg: #12141a;
+		--md-surface: #1a1d25;
+		--md-surface-sunken: #16181f;
+		--md-surface-hover: #21252f;
+		--md-border: #272b35;
+		--md-border-strong: #383e4b;
+		--md-text: #e9eaf0;
+		--md-text-soft: #b9bec9;
+		--md-muted: #949aa8;
+
+		// Lifted and desaturated: the light-mode indigo is unreadable on a dark
+		// ground, and a fully saturated one vibrates against it.
+		--md-accent: #8b88f0;
+		--md-accent-hover: #a2a0f5;
+		--md-accent-soft: #232149;
+		--md-accent-text: #12141a;
+
+		--md-good: #4ec99a;
+		--md-good-bg: #16302a;
+		--md-warn: #e6ab55;
+		--md-warn-bg: #33260f;
+		--md-bad: #f0857a;
+		--md-bad-bg: #3a1f1d;
+		--md-info: #7db4ee;
+		--md-info-bg: #17273a;
+
+		--md-chart-bar: #8b88f0;
+		--md-chart-track: #262a33;
+
+		// Elevation in a dark UI reads as lightness, not shadow — the light
+		// shadow is nearly invisible here, so surfaces do the work.
+		--md-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+		--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+	}
+}

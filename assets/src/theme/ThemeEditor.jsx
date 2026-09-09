@@ -14,6 +14,7 @@ import ColourField from './ColourField';
 import ThemePreview from './ThemePreview';
 import { api } from '../lib/api';
 import { contrastRatio, contrastVerdict } from '../lib/contrast';
+import { Panel } from '../components/Surfaces';
 
 const NETWORK = 'network';
 
@@ -322,13 +323,7 @@ export default function ThemeEditor() {
 
 			<div className="md-branding__grid">
 				<div>
-					<section className="md-panel">
-						<header className="md-panel__header">
-							<h2>
-								{ __( 'Admin chrome', 'modern-dashboard' ) }
-							</h2>
-						</header>
-
+					<Panel title={ __( 'Admin chrome', 'modern-dashboard' ) }>
 						<Checkbox
 							label={
 								isSite
@@ -386,15 +381,9 @@ export default function ThemeEditor() {
 								/>
 							) }
 						</Field>
-					</section>
+					</Panel>
 
-					<section className="md-panel">
-						<header className="md-panel__header">
-							<h2>
-								{ __( 'Login screen', 'modern-dashboard' ) }
-							</h2>
-						</header>
-
+					<Panel title={ __( 'Login screen', 'modern-dashboard' ) }>
 						<div className="md-colours">
 							{ colours
 								.filter( ( key ) => key.startsWith( 'login_' ) )
@@ -483,13 +472,9 @@ export default function ThemeEditor() {
 								/>
 							) }
 						</Field>
-					</section>
+					</Panel>
 
-					<section className="md-panel">
-						<header className="md-panel__header">
-							<h2>{ __( 'White-label', 'modern-dashboard' ) }</h2>
-						</header>
-
+					<Panel title={ __( 'White-label', 'modern-dashboard' ) }>
 						<Field
 							label={ __(
 								'Admin footer text',
@@ -545,23 +530,17 @@ export default function ThemeEditor() {
 								set( 'hide_wp_logo', event.target.checked )
 							}
 						/>
-					</section>
+					</Panel>
 				</div>
 
 				<div className="md-branding__side">
-					<section className="md-panel">
-						<header className="md-panel__header">
-							<h2>{ __( 'Preview', 'modern-dashboard' ) }</h2>
-						</header>
+					<Panel title={ __( 'Preview', 'modern-dashboard' ) }>
 						<div className="md-panel__pad">
 							<ThemePreview theme={ theme } />
 						</div>
-					</section>
+					</Panel>
 
-					<section className="md-panel">
-						<header className="md-panel__header">
-							<h2>{ __( 'Legibility', 'modern-dashboard' ) }</h2>
-						</header>
+					<Panel title={ __( 'Legibility', 'modern-dashboard' ) }>
 						<div className="md-panel__pad">
 							<ContrastReport theme={ theme } pairs={ pairs } />
 							<p className="md-field__help">
@@ -575,7 +554,7 @@ export default function ThemeEditor() {
 								) }
 							</p>
 						</div>
-					</section>
+					</Panel>
 				</div>
 			</div>
 		</div>

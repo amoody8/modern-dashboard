@@ -8,6 +8,7 @@ import { Checkbox, Field, Notice, Spinner } from './Primitives';
 import { api } from '../lib/api';
 import { intervalLabels } from '../lib/labels';
 import { formatRelative } from '../lib/format';
+import { Panel } from './Surfaces';
 
 export default function SettingsPanel( { onSaved } ) {
 	const [ settings, setSettings ] = useState( null );
@@ -87,11 +88,7 @@ export default function SettingsPanel( { onSaved } ) {
 				</Notice>
 			) }
 
-			<section className="md-panel">
-				<header className="md-panel__header">
-					<h2>{ __( 'Collection', 'modern-dashboard' ) }</h2>
-				</header>
-
+			<Panel title={ __( 'Collection', 'modern-dashboard' ) }>
 				<p className="md-panel__intro">
 					{ __(
 						'Metrics are gathered in the background, a slice of the network at a time. Larger batches keep data fresher; smaller batches are gentler on a busy server.',
@@ -190,13 +187,9 @@ export default function SettingsPanel( { onSaved } ) {
 						) }
 					</Field>
 				</div>
-			</section>
+			</Panel>
 
-			<section className="md-panel">
-				<header className="md-panel__header">
-					<h2>{ __( 'Storage scanning', 'modern-dashboard' ) }</h2>
-				</header>
-
+			<Panel title={ __( 'Storage scanning', 'modern-dashboard' ) }>
 				<p className="md-panel__intro">
 					{ __(
 						'Measuring an uploads directory means walking every file in it. On networks with large media libraries this is the most expensive thing collected, so it is bounded per site and can be turned off entirely.',
@@ -238,13 +231,9 @@ export default function SettingsPanel( { onSaved } ) {
 						/>
 					) }
 				</Field>
-			</section>
+			</Panel>
 
-			<section className="md-panel">
-				<header className="md-panel__header">
-					<h2>{ __( 'Access', 'modern-dashboard' ) }</h2>
-				</header>
-
+			<Panel title={ __( 'Access', 'modern-dashboard' ) }>
 				<Checkbox
 					label={ __(
 						'Let site administrators see their own site’s metrics under Dashboard → Site Metrics',
@@ -299,7 +288,7 @@ export default function SettingsPanel( { onSaved } ) {
 						/>
 					) }
 				</Field>
-			</section>
+			</Panel>
 
 			<p>
 				<button

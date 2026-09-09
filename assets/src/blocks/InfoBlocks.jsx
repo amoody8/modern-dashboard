@@ -4,18 +4,17 @@
 
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { formatNumber, formatRelative } from '../lib/format';
+import { Panel } from '../components/Surfaces';
 
 export function EnvironmentBlock( { block, overview } ) {
 	const settings = block.settings || {};
 	const environment = overview?.environment || {};
 
 	return (
-		<section className="md-panel md-panel--flush">
-			<header className="md-panel__header">
-				<h2>
-					{ settings.title || __( 'Network', 'modern-dashboard' ) }
-				</h2>
-			</header>
+		<Panel
+			title={ settings.title || __( 'Network', 'modern-dashboard' ) }
+			flush
+		>
 			<dl className="md-facts">
 				<div>
 					<dt>{ __( 'WordPress', 'modern-dashboard' ) }</dt>
@@ -46,7 +45,7 @@ export function EnvironmentBlock( { block, overview } ) {
 					</dd>
 				</div>
 			</dl>
-		</section>
+		</Panel>
 	);
 }
 

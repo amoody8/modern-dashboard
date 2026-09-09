@@ -1,38 +1,19 @@
 /**
- * Everything is nested under `.modern-dashboard` on purpose. WordPress ships a
- * large, unscoped admin stylesheet; scoping our own rules keeps the two from
- * fighting and keeps our specificity predictable.
+ * Screen and feature styles.
+ *
+ * Tokens and shared components live in styles/. This file holds what is
+ * specific to a screen — the builder canvas, the menu rows, the theme preview
+ * — and should shrink as more of it is expressed through shared components.
+ *
+ * Everything is nested under `.modern-dashboard` on purpose: WordPress ships a
+ * large, unscoped admin stylesheet, and scoping keeps the two from fighting.
  */
 
+@use 'styles/tokens';
+@use 'styles/components';
+
 .modern-dashboard {
-	--md-bg: #f6f7f9;
-	--md-surface: #fff;
-	--md-border: #dcdfe4;
-	--md-text: #1e2327;
-	--md-muted: #646970;
-	--md-accent: #2271b1;
-	--md-good: #007a5a;
-	--md-good-bg: #e7f5ef;
-	--md-warn: #8a6100;
-	--md-warn-bg: #fcf3e3;
-	--md-bad: #a4262c;
-	--md-bad-bg: #fdeced;
-	--md-info-bg: #eaf2fa;
-	--md-chart-bar: #2271b1;
-	--md-chart-track: #eef0f2;
-	--md-radius: 8px;
-	--md-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04);
-
 	margin: 20px 20px 0 0;
-	color: var(--md-text);
-	font-size: 13px;
-	line-height: 1.5;
-
-	*,
-	*::before,
-	*::after {
-		box-sizing: border-box;
-	}
 
 	// ---------------------------------------------------------------- layout
 
@@ -106,13 +87,6 @@
 
 	// ----------------------------------------------------------------- cards
 
-	.md-stats {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-
 	.md-stat {
 		display: flex;
 		flex-direction: column;
@@ -155,12 +129,6 @@
 		color: var(--md-good);
 	}
 
-	.md-freshness {
-		margin: 0 0 16px;
-		color: var(--md-muted);
-		font-size: 12px;
-	}
-
 	// ---------------------------------------------------------------- panels
 
 	.md-panel {
@@ -183,11 +151,6 @@
 			font-size: 14px;
 			font-weight: 600;
 		}
-	}
-
-	.md-panel__meta {
-		color: var(--md-muted);
-		font-size: 12px;
 	}
 
 	.md-panel__intro {
@@ -519,13 +482,6 @@
 		padding: 16px;
 	}
 
-	.md-checks {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px 20px;
-		padding: 12px 16px;
-	}
-
 	.md-check {
 		display: flex;
 		gap: 8px;
@@ -540,10 +496,6 @@
 		label {
 			cursor: pointer;
 		}
-	}
-
-	.md-checks .md-check {
-		padding: 0;
 	}
 
 	.md-settings .md-field {
