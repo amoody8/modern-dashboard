@@ -39,7 +39,13 @@ function update_site_meta( $id, $key, $value ) { $GLOBALS['meta'][ $id ][ $key ]
 function delete_site_meta( $id, $key ) { unset( $GLOBALS['meta'][ $id ][ $key ] ); return true; }
 function update_meta_cache( $type, $ids ) { return true; }
 function untrailingslashit( $s ) { return rtrim( (string) $s, '/' ); }
-function apply_filters( $tag, $value, ...$rest ) { return $value; }
+function add_filter( $tag, $callback ) { $GLOBALS['filters'][ $tag ][] = $callback; }
+function apply_filters( $tag, $value, ...$rest ) {
+	foreach ( $GLOBALS['filters'][ $tag ] ?? [] as $callback ) {
+		$value = $callback( $value, ...$rest );
+	}
+	return $value;
+}
 function do_action( $tag, ...$args ) {}
 function wp_parse_args( $args, $defaults ) { return array_merge( $defaults, $args ); }
 function __( $t, $d = null ) { return $t; }
@@ -52,6 +58,10 @@ function translate_user_role( $r ) { return $r; }
 function is_multisite() { return true; }
 function is_network_admin() { return $GLOBALS['is_network_admin'] ?? false; }
 function is_user_admin() { return false; }
+function current_user_can( $cap ) { return ! empty( $GLOBALS['user_caps'][ $cap ] ); }
+function network_admin_url( $path = '' ) { return 'https://net.example/wp-admin/network/' . ltrim( (string) $path, '/' ); }
+function admin_url( $path = '' ) { return 'https://site.example/wp-admin/' . ltrim( (string) $path, '/' ); }
+function get_admin_url( $blog_id, $path = '' ) { return 'https://site' . (int) $blog_id . '.example/wp-admin/' . ltrim( (string) $path, '/' ); }
 function wp_strip_all_tags( $t ) { return trim( strip_tags( (string) $t ) ); }
 function wp_json_encode( $d ) { return json_encode( $d ); }
 function sanitize_hex_color( $c ) {
@@ -548,6 +558,75 @@ check( 'switching blogs left the current site restored', get_current_blog_id(), 
 $themes_reread = new ModernDashboard\Theme\ThemeRepository();
 $GLOBALS['net_options'][ ModernDashboard\Theme\ThemeRepository::NETWORK_OPTION ]['accent'] = 'orange';
 check( 'stored garbage is re-sanitized on read', $themes_reread->network()['accent'], $defaults['accent'] );
+
+// --- Command registry and resolver -----------------------------------------
+
+echo "\nCommandRegistry\n";
+
+$GLOBALS['is_network_admin'] = false;
+$GLOBALS['user_caps']        = [ 'manage_options' => true, 'edit_posts' => true ];
+
+$registry = new ModernDashboard\Palette\CommandRegistry();
+$resolver = new ModernDashboard\Palette\CommandResolver( $registry );
+
+$all = $registry->all();
+check( 'core commands are registered', count( $all ) > 10, true );
+check( 'every command has a label', count( array_filter( $all, fn( $c ) => isset( $c['label'] ) ) ), count( $all ) );
+check( 'every command has an action type', count( array_filter( $all, fn( $c ) => isset( $c['action']['type'] ) ) ), count( $all ) );
+check( 'normalize fills in a default priority', $all['go.posts']['priority'] > 0, true );
+
+// A definition that omits `capability` must end up more restricted, not less.
+add_filter( 'modern_dashboard_commands', function ( $commands ) {
+	$commands['third.party'] = [
+		'label'  => 'Third party thing',
+		'action' => [ 'type' => 'navigate', 'url' => 'https://example.com/x?a=1&b=2' ],
+	];
+	$commands['third.broken'] = [ 'label' => 'No action at all' ];
+	return $commands;
+} );
+
+$registry_filtered = new ModernDashboard\Palette\CommandRegistry();
+$filtered          = $registry_filtered->all();
+check( 'filter can add a command', isset( $filtered['third.party'] ), true );
+check( 'a command without an action is dropped', isset( $filtered['third.broken'] ), false );
+check( 'missing capability fails closed to manage_options', $filtered['third.party']['capability'], 'manage_options' );
+
+echo "\nCommandResolver\n";
+
+$visible = $resolver->for_current_user();
+$ids     = array_column( $visible, 'id' );
+
+check( 'a permitted command is offered', in_array( 'go.posts', $ids, true ), true );
+check( 'a command the user cannot run is withheld', in_array( 'network.sites', $ids, true ), false );
+check( 'network-context command hidden on a site screen', in_array( 'network.updates', $ids, true ), false );
+check( 'the capability is not sent to the browser', isset( $visible[0]['capability'] ), false );
+check( 'commands are sorted by priority', $visible[0]['priority'] <= $visible[ count( $visible ) - 1 ]['priority'], true );
+
+// Same user, network screen: context flips which commands apply.
+$GLOBALS['is_network_admin'] = true;
+$GLOBALS['user_caps']        = [ 'manage_options' => true, 'manage_network_dashboard' => true ];
+
+$resolver_net = new ModernDashboard\Palette\CommandResolver( new ModernDashboard\Palette\CommandRegistry() );
+$net_ids      = array_column( $resolver_net->for_current_user(), 'id' );
+
+check( 'network command appears on a network screen', in_array( 'network.sites', $net_ids, true ), true );
+check( 'site-context command hidden on a network screen', in_array( 'go.posts', $net_ids, true ), false );
+
+$sites_command = null;
+foreach ( $resolver_net->for_current_user() as $command ) {
+	if ( 'network.sites' === $command['id'] ) { $sites_command = $command; }
+}
+check( 'network_admin_url prefix is expanded', $sites_command['action']['url'], 'https://net.example/wp-admin/network/sites.php' );
+
+check( 'resolve() returns a permitted command', $resolver_net->resolve( 'network.sites' )['id'], 'network.sites' );
+check( 'resolve() refuses an unknown id', $resolver_net->resolve( 'nope.not.real' ), null );
+
+$GLOBALS['user_caps'] = [ 'read' => true ];
+$resolver_reader      = new ModernDashboard\Palette\CommandResolver( new ModernDashboard\Palette\CommandRegistry() );
+check( 'resolve() refuses a forbidden id', $resolver_reader->resolve( 'network.sites' ), null );
+
+$GLOBALS['is_network_admin'] = false;
+$GLOBALS['user_caps']        = [];
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail === 0 ? 0 : 1 );
