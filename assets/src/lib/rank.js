@@ -25,8 +25,15 @@ const LOCAL_BONUS = 0.15;
 const RECENT_7_DAYS = 7 * 24 * 60 * 60;
 const RECENT_30_DAYS = 30 * 24 * 60 * 60;
 
-/** Results kept per group, so one noisy group cannot crowd out the rest. */
+/**
+ * Results kept per group, so one noisy group cannot crowd out the rest.
+ *
+ * Content is capped higher because it is the only group whose members come from
+ * many sites at once — five would mean five rows for a whole network, which is
+ * not a search result so much as a sample.
+ */
 const PER_GROUP_CAP = 5;
+const CONTENT_GROUP_CAP = 12;
 
 /**
  * How well `needle` matches `haystack`, from 0 (no match) to 1 (exact).
@@ -184,6 +191,12 @@ function identity( result ) {
 		return `command:${ result.id }`;
 	}
 
+	// Users are network-wide: the same account is indexed once per site it
+	// belongs to, so keying on the site would show one person many times.
+	if ( 'user' === result.type ) {
+		return `user:${ result.id }`;
+	}
+
 	return `${ result.type }:${ result.blogId ?? 0 }:${ result.id }`;
 }
 
@@ -234,14 +247,21 @@ export function mergeResults( groups, term, limit = 20 ) {
 			continue;
 		}
 
-		// Same thing from two sources: keep the live copy, which has the fresher
-		// title and a permission-checked destination, but the better score.
-		const winner = 'live' === result.source ? result : existing;
+		// Same thing from two sources. Prefer the live copy — fresher title, and
+		// a destination that was permission-checked for this user — otherwise
+		// the better-scoring one. Each keeps its OWN score: carrying the loser's
+		// would rank a row by a title it does not have. Written to be
+		// independent of the order the sources were concatenated in.
+		const candidate = { ...result, score };
+		let winner;
 
-		seen.set( key, {
-			...winner,
-			score: Math.max( existing.score, score ),
-		} );
+		if ( existing.source === candidate.source ) {
+			winner = candidate.score > existing.score ? candidate : existing;
+		} else {
+			winner = 'live' === candidate.source ? candidate : existing;
+		}
+
+		seen.set( key, winner );
 	}
 
 	const ordered = [ ...seen.values() ].sort( ( a, b ) => {
@@ -293,8 +313,9 @@ function capPerGroup( results, limit ) {
 
 		const group = result.group || result.type;
 		const count = counts.get( group ) || 0;
+		const cap = 'post' === group ? CONTENT_GROUP_CAP : PER_GROUP_CAP;
 
-		if ( count >= PER_GROUP_CAP ) {
+		if ( count >= cap ) {
 			continue;
 		}
 

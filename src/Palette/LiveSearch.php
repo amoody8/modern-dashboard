@@ -2,11 +2,16 @@
 /**
  * Searches the current site, live.
  *
- * This is the half of search that is correct by construction: it runs on the
- * blog the user is already on, under their own session, with no
+ * It runs on the blog the user is already on, under their own session, with no
  * `switch_to_blog()` — so the capability checks are the ones WordPress would
  * make anywhere else, including any `map_meta_cap` filter the site's own
  * plugins registered. Nothing is cached and nothing can be stale.
+ *
+ * Unpublished posts need care. `'perm' => 'readable'` is narrower than it
+ * sounds: it constrains only the `private` status, and leaves `draft`,
+ * `pending` and `future` unrestricted by author. So rather than lean on it,
+ * every result is checked with `current_user_can( 'edit_post' )` before it is
+ * returned — a title alone is enough to leak what a colleague is working on.
  *
  * A site running a search plugin (Relevanssi, ElasticPress) accelerates this
  * for free: `WP_Query` runs their `posts_search` filters like any other query.
@@ -39,14 +44,17 @@ final class LiveSearch {
 				's'                      => $term,
 				'post_type'              => $this->post_types(),
 				'post_status'            => array( 'publish', 'draft', 'pending', 'private', 'future' ),
-				'posts_per_page'         => $limit,
+				// Over-fetch: unpublished rows the user may not see are dropped
+				// below, and taking exactly $limit here would let them displace
+				// results the user is entitled to.
+				'posts_per_page'         => $limit * 3,
 				'orderby'                => 'relevance',
 				'no_found_rows'          => true,
 				'ignore_sticky_posts'    => true,
 				'update_post_meta_cache' => false,
 				'update_post_term_cache' => false,
-				// Applies core's own readability clauses for this user, the
-				// same way the admin post list does.
+				// Kept for the private-post clauses it does add; the checks in
+				// the loop below are what actually decide what is returned.
 				'perm'                   => 'readable',
 			)
 		);
@@ -57,11 +65,19 @@ final class LiveSearch {
 		foreach ( $query->posts as $post ) {
 			$editable = current_user_can( 'edit_post', $post->ID );
 
-			// `perm => readable` governs listing; the destination governs
-			// editing. Offering a contributor an edit link that 403s would be
-			// both a broken link and a small disclosure.
-			if ( ! $editable && ! current_user_can( 'read_post', $post->ID ) ) {
+			// Anything not yet public is editors-only: `read_post` is too weak a
+			// test here, because on many configurations it passes for a user who
+			// cannot edit the post and would still learn its title.
+			if ( 'publish' !== $post->post_status ) {
+				if ( ! $editable ) {
+					continue;
+				}
+			} elseif ( ! $editable && ! current_user_can( 'read_post', $post->ID ) ) {
 				continue;
+			}
+
+			if ( count( $results ) >= $limit ) {
+				break;
 			}
 
 			$results[] = array(

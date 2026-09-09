@@ -90,8 +90,10 @@ final class SearchIndex {
 	/**
 	 * Records for several sites at once.
 	 *
-	 * Primes the meta cache in a single query first, so reading N sites costs
-	 * one round trip rather than N.
+	 * On the site-meta path this primes the cache in one query, so reading N
+	 * sites costs one round trip. The network-option fallback has no equivalent
+	 * bulk read and stays N — acceptable, since that path only exists for
+	 * networks that never ran the upgrade creating wp_blogmeta.
 	 *
 	 * @param int[] $blog_ids Sites to read.
 	 *

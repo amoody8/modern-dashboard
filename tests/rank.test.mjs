@@ -7,7 +7,11 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { fuzzyScore, scoreResult, mergeResults } from '../assets/src/lib/rank.js';
+import {
+	fuzzyScore,
+	scoreResult,
+	mergeResults,
+} from '../assets/src/lib/rank.js';
 
 describe( 'fuzzyScore', () => {
 	it( 'scores an exact match highest', () => {
@@ -103,6 +107,74 @@ describe( 'mergeResults', () => {
 		assert.equal( merged[ 0 ].url, 'live-url' );
 	} );
 
+	it( 'gives the surviving copy its own score, not the loser\'s', () => {
+		// The live title matches poorly, the index title exactly. Carrying the
+		// index row's score onto the live row would rank it by a title it does
+		// not have, letting a duplicate outrank a better genuine match.
+		const merged = mergeResults(
+			{
+				commands: [],
+				live: [
+					{
+						type: 'post',
+						id: 5,
+						blogId: 2,
+						title: 'Zzz launch plan draft',
+						source: 'live',
+					},
+				],
+				index: [
+					{ type: 'post', id: 5, blogId: 2, title: 'launch', source: 'index' },
+				],
+				sites: [],
+			},
+			'launch'
+		);
+
+		assert.equal( merged.length, 1 );
+		assert.equal( merged[ 0 ].source, 'live' );
+		assert.equal(
+			merged[ 0 ].score,
+			scoreResult(
+				{ type: 'post', title: 'Zzz launch plan draft', source: 'live' },
+				'launch'
+			)
+		);
+	} );
+
+	it( 'collapses one user seen on several sites', () => {
+		// A user belongs to many sites and is indexed once per site; without a
+		// user-specific dedup key the same person fills the list.
+		const merged = mergeResults(
+			{
+				commands: [],
+				live: [],
+				index: [ 1, 2, 3, 4 ].map( ( blogId ) => ( {
+					type: 'user',
+					id: 9,
+					blogId,
+					title: 'editor@example.com',
+					source: 'index',
+				} ) ),
+				sites: [],
+			},
+			'editor'
+		);
+
+		assert.equal( merged.length, 1 );
+	} );
+
+	it( 'does not depend on the order sources are concatenated', () => {
+		const live = { type: 'post', id: 5, blogId: 2, title: 'Plan', source: 'live' };
+		const index = { type: 'post', id: 5, blogId: 2, title: 'Plan', source: 'index' };
+
+		const a = mergeResults( { commands: [], live: [ live ], index: [ index ], sites: [] }, 'plan' );
+		const b = mergeResults( { commands: [], live: [], index: [ index, live ], sites: [] }, 'plan' );
+
+		assert.equal( a[ 0 ].source, 'live' );
+		assert.equal( b[ 0 ].source, 'live' );
+	} );
+
 	it( 'keeps the same id on different sites apart', () => {
 		const merged = mergeResults(
 			{
@@ -164,8 +236,14 @@ describe( 'mergeResults', () => {
 			'report'
 		);
 
-		assert.ok( merged.some( ( r ) => 'command' === r.type ), 'the command survives a flood of posts' );
-		assert.ok( merged.filter( ( r ) => 'post' === r.type ).length <= 5 );
+		assert.ok(
+			merged.some( ( r ) => 'command' === r.type ),
+			'the command survives a flood of posts'
+		);
+		// The point is that one group cannot take every slot, not the exact
+		// number — content is capped higher than other groups because its rows
+		// come from the whole network.
+		assert.ok( merged.filter( ( r ) => 'post' === r.type ).length < 20 );
 	} );
 
 	it( 'respects the overall limit', () => {

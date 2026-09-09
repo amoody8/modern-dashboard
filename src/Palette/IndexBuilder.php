@@ -65,12 +65,15 @@ final class IndexBuilder {
 	}
 
 	/**
+	 * Signature matches Scheduler::on_site_deleted(), which handles the same
+	 * hook — `wp_delete_site` passes a WP_Site.
+	 *
 	 * @param \WP_Site|int $site Site being deleted.
 	 */
 	public function on_site_deleted( $site ): void {
-		$blog_id = is_object( $site ) ? (int) $site->blog_id : (int) $site;
-
-		$this->index->delete( $blog_id );
+		if ( $site instanceof \WP_Site ) {
+			$this->index->delete( (int) $site->blog_id );
+		}
 	}
 
 	/**
@@ -83,8 +86,18 @@ final class IndexBuilder {
 			return;
 		}
 
-		$entries  = $this->build( $blog_id );
 		$existing = $this->index->get( $blog_id );
+
+		// This runs inside the scheduler's lock, on top of metrics collection
+		// that already visited the site. `last_updated` moves whenever the site
+		// publishes, so a site that has not changed since the last pass can be
+		// skipped before paying for the queries — the signature guard below can
+		// only save the write, not the read.
+		if ( null !== $existing && ! $this->changed_since( $site, (int) ( $existing['indexed_at'] ?? 0 ) ) ) {
+			return;
+		}
+
+		$entries = $this->build( $blog_id );
 
 		// Indexing runs on every batch; rewriting an unchanged row would be a
 		// query per site per pass for no gain.
@@ -105,11 +118,31 @@ final class IndexBuilder {
 	}
 
 	/**
+	 * Whether a site has published anything since it was last indexed.
+	 *
+	 * Users are not covered by `last_updated`, so this is a heuristic: a site
+	 * whose only change is a new account waits for the next content change or
+	 * for a manual refresh. That is the right trade for a search index that is
+	 * already eventually consistent.
+	 */
+	private function changed_since( \WP_Site $site, int $indexed_at ): bool {
+		if ( 0 === $indexed_at ) {
+			return true;
+		}
+
+		$updated = strtotime( (string) $site->last_updated . ' UTC' );
+
+		return false === $updated || $updated >= $indexed_at;
+	}
+
+	/**
 	 * Collect one site's searchable entries.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function build( int $blog_id ): array {
+		// Runs switched so admin_url() resolves against this site — that is what
+		// makes a stored URL point at the site that owns the row.
 		switch_to_blog( $blog_id );
 
 		try {
@@ -149,7 +182,7 @@ final class IndexBuilder {
 				'id'    => (int) $post->ID,
 				'title' => (string) $post->post_title,
 				'sub'   => (string) $post->post_type,
-				'url'   => get_edit_post_link( $post->ID, 'raw' ),
+				'url'   => $this->edit_post_url( $post ),
 				'at'    => (int) strtotime( $post->post_modified_gmt . ' UTC' ),
 			);
 		}
@@ -178,7 +211,7 @@ final class IndexBuilder {
 				'id'    => (int) $user->ID,
 				'title' => (string) ( $user->display_name ?: $user->user_login ),
 				'sub'   => (string) $user->user_login,
-				'url'   => get_edit_user_link( $user->ID ),
+				'url'   => admin_url( 'user-edit.php?user_id=' . (int) $user->ID ),
 				'at'    => 0,
 			);
 		}
@@ -187,16 +220,36 @@ final class IndexBuilder {
 	}
 
 	/**
+	 * Editor URL for a post.
+	 *
+	 * Deliberately not `get_edit_post_link()`: that returns null unless the
+	 * *current* user can edit the post, and indexing runs on cron where there is
+	 * no current user, so every URL would come back empty. Permission is not
+	 * this function's business anyway — the index is only ever read by someone
+	 * who has already cleared the network capability, and the destination
+	 * enforces its own access when they arrive.
+	 *
+	 * @param \WP_Post $post Post being indexed.
+	 */
+	private function edit_post_url( \WP_Post $post ): string {
+		$type = get_post_type_object( $post->post_type );
+
+		// Custom post types can declare their own edit link template.
+		if ( $type && ! empty( $type->_edit_link ) ) {
+			return admin_url( sprintf( $type->_edit_link . '&action=edit', $post->ID ) );
+		}
+
+		return admin_url( 'post.php?post=' . (int) $post->ID . '&action=edit' );
+	}
+
+	/**
 	 * @return string[]
 	 */
 	private function post_types(): array {
-		$types = get_post_types(
-			array(
-				'show_ui' => true,
-				'public'  => true,
-			),
-			'names'
-		);
+		// Must match LiveSearch: the two halves feed one result list, and a type
+		// searchable on the current site but missing from the index would make
+		// the same query answer differently depending on where it was run.
+		$types = get_post_types( array( 'show_ui' => true ), 'names' );
 
 		unset( $types['attachment'] );
 

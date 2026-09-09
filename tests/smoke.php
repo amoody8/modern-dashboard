@@ -697,6 +697,19 @@ check( 'signature ignores timestamps', $signature->invoke( $builder, $entries_a 
 check( 'signature is order independent', $signature->invoke( $builder, $entries_a ), $signature->invoke( $builder, $entries_reordered ) );
 check( 'signature changes when a title changes', $signature->invoke( $builder, $entries_a ) !== $signature->invoke( $builder, $entries_changed ), true );
 
+// --- IndexBuilder freshness skip --------------------------------------------
+
+echo "\nIndexBuilder freshness\n";
+
+$changed = new ReflectionMethod( $builder, 'changed_since' );
+
+$fresh_site = new WP_Site( [ 'blog_id' => 5, 'blogname' => 'Fresh', 'domain' => 'f.example', 'path' => '/', 'siteurl' => 'https://f.example' ] );
+$fresh_site->last_updated = gmdate( 'Y-m-d H:i:s', time() - 60 );
+
+check( 'a never-indexed site is always built', $changed->invoke( $builder, $fresh_site, 0 ), true );
+check( 'a site updated since the last pass is rebuilt', $changed->invoke( $builder, $fresh_site, time() - 3600 ), true );
+check( 'an unchanged site is skipped before the queries run', $changed->invoke( $builder, $fresh_site, time() ), false );
+
 // --- SearchController: the tenant boundary ----------------------------------
 
 echo "\nSearchController isolation\n";

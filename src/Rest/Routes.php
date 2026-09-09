@@ -173,7 +173,6 @@ final class Routes {
 		);
 	}
 
-
 	/**
 	 * Network admins read any site. A site administrator may read their own
 	 * site's record when the network has opted in.

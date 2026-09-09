@@ -7,7 +7,10 @@
  * Who may see what is decided here, and the reasoning is not obvious, so:
  *
  * 1. **Current-site content** comes from `LiveSearch`, which runs under the
- *    requesting user's own session on their own blog. Correct by construction.
+ *    requesting user's own session on their own blog, so capability checks are
+ *    the ones WordPress would make anywhere else. Unpublished posts are gated
+ *    on `edit_post` there rather than on the query's `perm` argument — see the
+ *    note in that file for why `perm` is not enough.
  *
  * 2. **Cross-network content is super admins only.** Whether a user may read a
  *    post on another site depends on that site's `map_meta_cap` /
@@ -21,7 +24,10 @@
  *    read at all.
  *
  * 3. **Sites** are filtered to the ones a non-super-admin actually belongs to,
- *    via `get_blogs_of_user()`.
+ *    via `get_blogs_of_user()`. Membership is the test, not `VIEW`: a site's
+ *    name and address are already visible to any member through the toolbar's
+ *    site switcher, so withholding them here would protect nothing while making
+ *    the palette useless for the person it is meant to serve.
  *
  * 4. **Users** require `manage_network_users`. Enumerating accounts across a
  *    network is a disclosure concern even when each name looks harmless.
@@ -158,6 +164,15 @@ final class SearchController {
 			}
 		}
 
+		// Ranking proper is the client's job, but the slice happens here — so
+		// order by match quality first, or a strong hit on a high-numbered site
+		// is discarded before the client ever sees it.
+		usort(
+			$results,
+			fn( array $a, array $b ): int => $this->closeness( $term, (string) $b['title'] )
+				<=> $this->closeness( $term, (string) $a['title'] )
+		);
+
 		$results = array_slice( $results, 0, $limit );
 
 		return array(
@@ -177,6 +192,13 @@ final class SearchController {
 
 		if ( array() === $allowed ) {
 			return array();
+		}
+
+		// The same reasoning as SCAN_CEILING, applied to the read this endpoint
+		// makes on every keystroke: materializing every record on a very large
+		// network costs more than the extra matches are worth.
+		if ( count( $allowed ) > self::SCAN_CEILING ) {
+			$allowed = array_slice( $allowed, 0, self::SCAN_CEILING );
 		}
 
 		$results = array();
@@ -224,6 +246,35 @@ final class SearchController {
 		// A member of an excluded site still should not see it here: exclusion
 		// is a network-admin decision about what this plugin reports on.
 		return array_values( array_intersect( $ids, $this->repository->site_ids() ) );
+	}
+
+	/**
+	 * Coarse match quality, used only to decide what survives the slice.
+	 *
+	 * Mirrors the tiers in assets/src/lib/rank.js roughly enough to keep the
+	 * best candidates; the client does the real ordering.
+	 */
+	private function closeness( string $term, string $haystack ): int {
+		$needle = strtolower( trim( $term ) );
+		$text   = strtolower( $haystack );
+
+		if ( '' === $needle || '' === $text ) {
+			return 0;
+		}
+
+		if ( $needle === $text ) {
+			return 4;
+		}
+
+		if ( str_starts_with( $text, $needle ) ) {
+			return 3;
+		}
+
+		if ( preg_match( '/\b' . preg_quote( $needle, '/' ) . '/', $text ) ) {
+			return 2;
+		}
+
+		return str_contains( $text, $needle ) ? 1 : 0;
 	}
 
 	/**
