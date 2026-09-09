@@ -282,7 +282,7 @@ final class CommandRegistry {
 				'icon'       => 'hidden',
 				'priority'   => 90,
 				'action'     => array(
-					'type' => 'client',
+					'type'    => 'client',
 					// Reloads with the bypass argument, so the recovery hatch is
 					// discoverable from inside the thing it disables.
 					'handler' => 'disable-palette',

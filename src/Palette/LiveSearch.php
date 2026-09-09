@@ -81,17 +81,17 @@ final class LiveSearch {
 			}
 
 			$results[] = array(
-				'type'    => 'post',
-				'id'      => (int) $post->ID,
-				'blogId'  => $blog_id,
-				'title'   => (string) $post->post_title,
-				'sub'     => (string) $post->post_type,
-				'status'  => (string) $post->post_status,
-				'url'     => $editable
+				'type'   => 'post',
+				'id'     => (int) $post->ID,
+				'blogId' => $blog_id,
+				'title'  => (string) $post->post_title,
+				'sub'    => (string) $post->post_type,
+				'status' => (string) $post->post_status,
+				'url'    => $editable
 					? (string) get_edit_post_link( $post->ID, 'raw' )
 					: (string) get_permalink( $post->ID ),
-				'at'      => (int) strtotime( $post->post_modified_gmt . ' UTC' ),
-				'source'  => 'live',
+				'at'     => (int) strtotime( $post->post_modified_gmt . ' UTC' ),
+				'source' => 'live',
 			);
 		}
 

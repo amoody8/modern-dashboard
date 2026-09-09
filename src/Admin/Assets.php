@@ -118,7 +118,9 @@ final class Assets {
 	}
 
 	/**
-	 * @param array{dependencies:string[],version:string} $meta Build metadata.
+	 * @param string                                      $handle Script handle.
+	 * @param string                                      $entry  Build entry name.
+	 * @param array{dependencies:string[],version:string} $meta   Build metadata.
 	 */
 	private function enqueue_entry( string $handle, string $entry, array $meta ): void {
 		$build = $this->plugin->dir() . 'build/';

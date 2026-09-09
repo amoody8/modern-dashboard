@@ -94,6 +94,7 @@ final class CommandResolver {
 	}
 
 	/**
+	 * @param string              $id         Command id.
 	 * @param array<string,mixed> $definition Normalized definition.
 	 *
 	 * @return array<string,mixed>
