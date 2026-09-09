@@ -29,11 +29,11 @@ cron, or the tenant boundary with more than a toy dataset — treat it as a demo
 
 ## 3. Local Multisite — the one that matters
 
-Docker Desktop is installed but does **not** start headlessly. Open it once
-manually and accept the licence, then:
+Docker Desktop must be running. Note its CLI lives in `/usr/local/bin`, which is
+not on the default non-interactive PATH — hence the export below.
 
 ```bash
-export PATH="$HOME/.nvm/versions/node/v22.21.1/bin:/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.nvm/versions/node/v22.21.1/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
 npm run env:start
 npm run env:setup
 ```

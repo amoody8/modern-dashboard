@@ -11,8 +11,10 @@
 
 set -euo pipefail
 
+# `--quiet` confuses argument parsing in current wp-env, which then reads the
+# container name as empty; keep the plain form and mute it here instead.
 wp() {
-	npx --no-install wp-env run --quiet cli wp "$@"
+	npx --no-install wp-env run cli wp "$@" 2>/dev/null
 }
 
 echo "→ Network-activating the plugin"
@@ -51,10 +53,14 @@ wp post create --post_title="Alpha unpublished salary review" --post_status=draf
 echo "→ Creating a site administrator on beta only"
 # The point of this user: they are NOT a super admin and belong to exactly one
 # site, which is what the cross-tenant checks depend on.
+# WP-CLI has no --role=none, so create the account, grant administrator on beta,
+# then drop the main-site role: the point is a user who belongs to exactly one
+# site, which is what the cross-tenant checks rest on.
 if ! wp user get betaadmin --field=user_login >/dev/null 2>&1; then
-	wp user create betaadmin betaadmin@example.com --role=none --user_pass=password >/dev/null
+	wp user create betaadmin betaadmin@example.com --role=subscriber --user_pass=password >/dev/null
 fi
 wp user set-role betaadmin administrator --url="${beta_url}" >/dev/null 2>&1 || true
+wp user remove-role betaadmin --url="$(wp site list --field=url | head -1)" >/dev/null 2>&1 || true
 
 echo "→ Collecting metrics and building the search index"
 wp cron event run modern_dashboard_refresh_batch >/dev/null 2>&1 || true
