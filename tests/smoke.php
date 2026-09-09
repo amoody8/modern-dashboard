@@ -59,6 +59,15 @@ function is_multisite() { return true; }
 function is_network_admin() { return $GLOBALS['is_network_admin'] ?? false; }
 function is_user_admin() { return false; }
 function current_user_can( $cap ) { return ! empty( $GLOBALS['user_caps'][ $cap ] ); }
+function get_current_user_id() { return $GLOBALS['current_user_id'] ?? 1; }
+function get_post_types( $args = [], $output = 'names' ) { return [ 'post' => 'post', 'page' => 'page', 'attachment' => 'attachment' ]; }
+function get_blogs_of_user( $user_id ) {
+	$out = [];
+	foreach ( $GLOBALS['user_blogs'][ $user_id ] ?? [] as $blog_id ) {
+		$out[] = (object) [ 'userblog_id' => $blog_id ];
+	}
+	return $out;
+}
 function network_admin_url( $path = '' ) { return 'https://net.example/wp-admin/network/' . ltrim( (string) $path, '/' ); }
 function admin_url( $path = '' ) { return 'https://site.example/wp-admin/' . ltrim( (string) $path, '/' ); }
 function get_admin_url( $blog_id, $path = '' ) { return 'https://site' . (int) $blog_id . '.example/wp-admin/' . ltrim( (string) $path, '/' ); }
@@ -87,6 +96,11 @@ function is_wp_error( $t ) { return $t instanceof WP_Error; }
 function wp_roles() { return new class() {
 	public function get_names() { return array( 'administrator' => 'Administrator', 'editor' => 'Editor' ); }
 }; }
+
+class WP_Query {
+	public array $posts = [];
+	public function __construct( $args = [] ) {}
+}
 
 class WP_Error {
 	public $code;
@@ -118,6 +132,7 @@ ModernDashboard\Autoloader::register( 'ModernDashboard', dirname( __DIR__ ) . '/
 use ModernDashboard\Data\MetricsRepository;
 use ModernDashboard\Data\SiteCollector;
 use ModernDashboard\Data\Store;
+use ModernDashboard\Palette\SearchIndex;
 use ModernDashboard\Settings\Settings;
 
 $pass = 0;
@@ -627,6 +642,121 @@ check( 'resolve() refuses a forbidden id', $resolver_reader->resolve( 'network.s
 
 $GLOBALS['is_network_admin'] = false;
 $GLOBALS['user_caps']        = [];
+
+// --- Search index -----------------------------------------------------------
+
+echo "\nSearchIndex\n";
+
+
+$search = new SearchIndex();
+$now    = time();
+
+$search->set( 1, [ 'indexed_at' => $now - 100, 'name' => 'Alpha', 'url' => 'https://a.example', 'entries' => [] ] );
+$search->set( 2, [ 'indexed_at' => $now - 9000, 'name' => 'Beta', 'url' => 'https://b.example', 'entries' => [] ] );
+$search->set( 3, [ 'indexed_at' => $now - 10, 'name' => 'Gamma', 'url' => 'https://c.example', 'entries' => [] ] );
+
+check( 'stalest orders oldest first', $search->stalest( [ 1, 2, 3 ], 2 ), [ 2, 1 ] );
+check( 'never-indexed site sorts ahead of everything', $search->stalest( [ 1, 2, 3, 9 ], 1 ), [ 9 ] );
+check( 'oldest reports the laggard', $search->oldest( [ 1, 3 ] ), $now - 100 );
+check( 'oldest is null for unindexed sites', $search->oldest( [ 42 ] ), null );
+
+$search->prune( [ 1, 3 ] );
+check( 'prune drops departed sites', array_keys( $search->index() ), [ 1, 3 ] );
+
+$search->delete( 1 );
+check( 'delete removes the record', $search->get( 1 ), null );
+check( 'delete removes the index entry', array_keys( $search->index() ), [ 3 ] );
+
+check( 'records() reads several at once', array_keys( $search->records( [ 3, 999 ] ) ), [ 3 ] );
+
+// --- IndexBuilder signature guard -------------------------------------------
+
+echo "\nIndexBuilder signature\n";
+
+$builder   = new ModernDashboard\Palette\IndexBuilder( new SearchIndex(), new Settings() );
+$signature = new ReflectionMethod( $builder, 'signature' );
+
+$entries_a = [
+	[ 'type' => 'post', 'id' => 1, 'title' => 'Hello', 'url' => 'u1', 'at' => 100 ],
+	[ 'type' => 'post', 'id' => 2, 'title' => 'World', 'url' => 'u2', 'at' => 200 ],
+];
+// Same content, different modification times.
+$entries_b = [
+	[ 'type' => 'post', 'id' => 1, 'title' => 'Hello', 'url' => 'u1', 'at' => 999 ],
+	[ 'type' => 'post', 'id' => 2, 'title' => 'World', 'url' => 'u2', 'at' => 888 ],
+];
+$entries_reordered = array_reverse( $entries_a );
+$entries_changed   = [
+	[ 'type' => 'post', 'id' => 1, 'title' => 'Hello there', 'url' => 'u1', 'at' => 100 ],
+	[ 'type' => 'post', 'id' => 2, 'title' => 'World', 'url' => 'u2', 'at' => 200 ],
+];
+
+check( 'signature ignores timestamps', $signature->invoke( $builder, $entries_a ), $signature->invoke( $builder, $entries_b ) );
+check( 'signature is order independent', $signature->invoke( $builder, $entries_a ), $signature->invoke( $builder, $entries_reordered ) );
+check( 'signature changes when a title changes', $signature->invoke( $builder, $entries_a ) !== $signature->invoke( $builder, $entries_changed ), true );
+
+// --- SearchController: the tenant boundary ----------------------------------
+
+echo "\nSearchController isolation\n";
+
+$index_for_search = new SearchIndex();
+$index_for_search->set( 1, [
+	'indexed_at' => time(),
+	'name'       => 'Alpha site',
+	'url'        => 'https://alpha.example',
+	'entries'    => [ [ 'type' => 'post', 'id' => 11, 'title' => 'Alpha secret plan', 'sub' => 'post', 'url' => 'e11', 'at' => 0 ] ],
+] );
+$index_for_search->set( 2, [
+	'indexed_at' => time(),
+	'name'       => 'Beta site',
+	'url'        => 'https://beta.example',
+	'entries'    => [ [ 'type' => 'post', 'id' => 22, 'title' => 'Beta roadmap', 'sub' => 'post', 'url' => 'e22', 'at' => 0 ] ],
+] );
+
+$GLOBALS['sites'] = [
+	1 => new WP_Site( [ 'blog_id' => 1, 'blogname' => 'Alpha site', 'domain' => 'alpha.example', 'path' => '/', 'siteurl' => 'https://alpha.example' ] ),
+	2 => new WP_Site( [ 'blog_id' => 2, 'blogname' => 'Beta site', 'domain' => 'beta.example', 'path' => '/', 'siteurl' => 'https://beta.example' ] ),
+];
+
+$controller = new ModernDashboard\Palette\SearchController(
+	$index_for_search,
+	new ModernDashboard\Palette\LiveSearch(),
+	new MetricsRepository( new Store(), new SiteCollector( new Settings() ) )
+);
+
+// A site administrator on site 2, not a super admin.
+$GLOBALS['current_user_id']   = 7;
+$GLOBALS['user_blogs']        = [ 7 => [ 2 ] ];
+$GLOBALS['user_caps']         = [ 'manage_options' => true ];
+$GLOBALS['current_blog']     = 2;
+
+$site_admin_view = $controller->search( 'Alpha', [ 'post', 'user', 'site' ], 20 );
+
+check( 'site admin gets no cross-network content', $site_admin_view['index'], [] );
+check( 'a matching site the user does not belong to is withheld', array_column( $site_admin_view['sites'], 'blogId' ), [] );
+
+$site_admin_own = $controller->search( 'Beta', [ 'site' ], 20 );
+check( 'site admin can find their own site', array_column( $site_admin_own['sites'], 'blogId' ), [ 2 ] );
+
+$site_admin_users = $controller->search( 'anyone', [ 'user' ], 20 );
+check( 'site admin gets no network users', $site_admin_users['index'], [] );
+
+// The same query as a super admin.
+$GLOBALS['user_caps'] = [ 'manage_options' => true, 'manage_network_dashboard' => true, 'manage_network_users' => true ];
+
+$super_view = $controller->search( 'Alpha', [ 'post', 'user', 'site' ], 20 );
+check( 'super admin gets cross-network content', count( $super_view['index'] ) > 0, true );
+check( 'cross-network hit carries its site', $super_view['index'][0]['blogId'], 1 );
+check( 'super admin sees a site they are not a member of', array_column( $super_view['sites'], 'blogId' ), [ 1 ] );
+check( 'super admin sees every site when the term matches both', count( $controller->search( 'site', [ 'site' ], 20 )['sites'] ), 2 );
+
+// The current site is served by the live query, so the index must not
+// duplicate it.
+$beta_view = $controller->search( 'Beta roadmap', [ 'post' ], 20 );
+check( 'current site is not duplicated from the index', array_column( $beta_view['index'], 'blogId' ), [] );
+
+$GLOBALS['user_caps']       = [];
+$GLOBALS['current_blog'] = 1;
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail === 0 ? 0 : 1 );
