@@ -9,8 +9,8 @@
 // hierarchy from weight and space rather than from boxes and rules.
 
 body.mds-shell {
-	--mds-rail-w: 224px;
-	--mds-top-h: 52px;
+	--mds-rail-w: 208px;
+	--mds-top-h: 56px;
 
 	// Core's chrome, gone. Not `display: none` on #wpadminbar alone — core
 	// also offsets html by its height, so both have to go together.
@@ -58,8 +58,8 @@ html.wp-toolbar:has(body.mds-shell) {
 	width: var(--mds-rail-w);
 	display: flex;
 	flex-direction: column;
-	background: var(--mds-surface);
-	border-right: 1px solid var(--mds-border);
+	background: var(--mds-rail-bg);
+	border-right: 1px solid var(--mds-border-soft);
 	z-index: 9990;
 	overflow: hidden;
 }
@@ -83,13 +83,13 @@ html.wp-toolbar:has(body.mds-shell) {
 
 .mds-nav__mark {
 	flex: 0 0 auto;
-	width: 26px;
-	height: 26px;
-	border-radius: 7px;
-	background: var(--mds-accent);
-	color: #fff;
-	font-size: 13px;
-	font-weight: 650;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--mds-radius-sm);
+	background: var(--mds-text);
+	color: var(--mds-bg);
+	font-size: 12px;
+	font-weight: 700;
 	display: grid;
 	place-items: center;
 }
@@ -166,9 +166,9 @@ html.wp-toolbar:has(body.mds-shell) {
 .mds-nav__item {
 	display: flex;
 	align-items: center;
-	gap: 9px;
-	padding: 6px 8px;
-	border-radius: 7px;
+	gap: 10px;
+	padding: 7px 10px;
+	border-radius: var(--mds-radius-sm);
 	color: var(--mds-text-soft);
 	text-decoration: none;
 	font-size: 13px;
@@ -179,12 +179,22 @@ html.wp-toolbar:has(body.mds-shell) {
 	&:focus-visible { outline: 2px solid var(--mds-accent); outline-offset: -2px; }
 
 	&.is-current {
-		background: var(--mds-accent-soft);
-		color: var(--mds-accent);
+		background: var(--mds-hover);
+		color: var(--mds-text);
 		font-weight: 600;
 
-		.mds-nav__icon { color: var(--mds-accent); }
+		.mds-nav__icon {
+			color: var(--mds-text);
+		}
 	}
+}
+
+.mds-nav__icon {
+	flex: 0 0 auto;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	color: var(--mds-muted);
 }
 
 .mds-nav__icon {
@@ -243,9 +253,8 @@ html.wp-toolbar:has(body.mds-shell) {
 	justify-content: space-between;
 	gap: 16px;
 	padding: 0 24px;
-	background: color-mix(in srgb, var(--mds-surface) 88%, transparent);
-	backdrop-filter: saturate(1.6) blur(8px);
-	border-bottom: 1px solid var(--mds-border);
+	background: var(--mds-bg);
+	border-bottom: 1px solid var(--mds-border-soft);
 	z-index: 9989;
 }
 
@@ -265,9 +274,9 @@ html.wp-toolbar:has(body.mds-shell) {
 .mds-top__ghost,
 .mds-top__primary {
 	font-size: 12.5px;
-	font-weight: 600;
-	padding: 6px 12px;
-	border-radius: 7px;
+	font-weight: 550;
+	padding: 6px 13px;
+	border-radius: var(--mds-radius-sm);
 	text-decoration: none;
 	line-height: 1.4;
 }
@@ -280,11 +289,11 @@ html.wp-toolbar:has(body.mds-shell) {
 }
 
 .mds-top__primary {
-	background: var(--mds-accent);
-	color: #fff;
-	border: 1px solid var(--mds-accent);
+	background: var(--mds-text);
+	color: var(--mds-bg);
+	border: 1px solid var(--mds-text);
 
-	&:hover { background: var(--mds-accent-hover); color: #fff; }
+	&:hover { background: var(--mds-text-soft); border-color: var(--mds-text-soft); color: var(--mds-bg); }
 }
 
 .mds-top__account { position: relative; }

@@ -23,27 +23,40 @@
 @use 'styles/tokens';
 
 :root {
-	--mds-bg: #f4f5f8;
+	// Sampled from the reference. The page ground is pure white and the rail
+	// is the tinted surface — the opposite of the usual dashboard convention,
+	// and the thing that makes this look calm rather than boxed.
+	--mds-bg: #ffffff;
 	--mds-surface: #ffffff;
-	--mds-sunken: #f8f9fb;
-	--mds-hover: #f2f4f8;
-	--mds-border: #e6e8ee;
-	--mds-border-strong: #d3d7e0;
-	--mds-text: #14161c;
-	--mds-text-soft: #4a4f5c;
-	--mds-muted: #6b7280;
-	--mds-accent: #4b48d6;
-	--mds-accent-hover: #3f3cc4;
-	--mds-accent-soft: #eeedfc;
-	--mds-good: #0d8a5f;
-	--mds-warn: #b26a00;
-	--mds-bad: #c0392f;
+	--mds-rail-bg: #fafafa;
+	--mds-sunken: #fafafa;
+	--mds-hover: #f2f2f3;
+	--mds-border: #ececed;
+	--mds-border-soft: #f4f4f5;
+	--mds-border-strong: #dededf;
+	--mds-text: #1c1c1e;
+	--mds-text-soft: #4a4a4d;
+	--mds-muted: #7f7f81;
 
-	--mds-radius-sm: 7px;
-	--mds-radius: 10px;
-	--mds-radius-lg: 14px;
+	// One accent, used only where something is genuinely selected or primary.
+	// Everything else is greyscale, so the accent means something when it
+	// appears rather than being decoration.
+	--mds-accent: #3a3ad4;
+	--mds-accent-hover: #3131b8;
+	--mds-accent-soft: #f0f0fd;
 
-	--mds-shadow: 0 1px 2px rgba(16, 18, 26, 0.04), 0 4px 12px rgba(16, 18, 26, 0.03);
+	// Semantic, and separate from the accent.
+	--mds-good: #12855c;
+	--mds-warn: #a86b12;
+	--mds-bad: #c8372d;
+
+	--mds-radius-sm: 6px;
+	--mds-radius: 8px;
+	--mds-radius-lg: 10px;
+
+	// Cards in the reference carry no shadow at all: separation comes from a
+	// hairline border on white. A shadow here would read as heavier and older.
+	--mds-shadow: none;
 
 	// Core hard-codes #wpcontent { margin-left: 160px } against a 160px
 	// sidebar. Detaching the sidebar means owning that arithmetic: the content
@@ -58,22 +71,24 @@
 body.admin-color-modern,
 body.admin-color-midnight {
 	@media (prefers-color-scheme: dark) {
-		--mds-bg: #12141a;
-		--mds-surface: #1a1d25;
-		--mds-sunken: #16181f;
-		--mds-hover: #21252f;
-		--mds-border: #272b35;
-		--mds-border-strong: #383e4b;
-		--mds-text: #e9eaf0;
-		--mds-text-soft: #b9bec9;
-		--mds-muted: #949aa8;
-		--mds-accent: #8b88f0;
-		--mds-accent-hover: #a2a0f5;
+		--mds-bg: #131315;
+		--mds-surface: #18181b;
+		--mds-rail-bg: #131315;
+		--mds-sunken: #202023;
+		--mds-hover: #232326;
+		--mds-border: #2a2a2e;
+		--mds-border-soft: #232326;
+		--mds-border-strong: #3a3a3f;
+		--mds-text: #f2f2f3;
+		--mds-text-soft: #c4c4c7;
+		--mds-muted: #8a8a8e;
+		--mds-accent: #9d9bf5;
+		--mds-accent-hover: #b4b2f8;
 		--mds-accent-soft: #232149;
-		--mds-good: #4ec99a;
-		--mds-warn: #e6ab55;
-		--mds-bad: #f0857a;
-		--mds-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+		--mds-good: #45c491;
+		--mds-warn: #d9a25c;
+		--mds-bad: #ef8378;
+		--mds-shadow: none;
 	}
 }
 
