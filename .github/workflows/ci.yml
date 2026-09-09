@@ -62,6 +62,8 @@ jobs:
           test -f build/palette.js
           test -f build/palette.asset.php
           test -f build/admin.css
+          test -f build/shell.js
+          test -f build/shell.css
 
       - name: Fail if the committed build is stale
         run: git diff --exit-code -- build/

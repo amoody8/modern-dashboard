@@ -45,8 +45,12 @@
 
 	--mds-shadow: 0 1px 2px rgba(16, 18, 26, 0.04), 0 4px 12px rgba(16, 18, 26, 0.03);
 
-	--mds-sidebar: 172px;
-	--mds-gap: 20px;
+	// Core hard-codes #wpcontent { margin-left: 160px } against a 160px
+	// sidebar. Detaching the sidebar means owning that arithmetic: the content
+	// offset must be the sidebar width plus both gaps, or the two overlap.
+	--mds-sidebar: 168px;
+	--mds-gap: 16px;
+	--mds-rail: calc(var(--mds-sidebar) + var(--mds-gap) * 2);
 }
 
 // The dark palette. Gated on the admin colour scheme rather than the OS alone:
@@ -140,13 +144,25 @@ body.wp-admin.mds-skin {
 		box-shadow: none;
 	}
 
+	#adminmenuback,
+	#adminmenumain {
+		width: var(--mds-rail);
+	}
+
 	#adminmenuwrap {
 		background: var(--mds-surface);
 		border: 1px solid var(--mds-border);
 		border-radius: var(--mds-radius-lg);
 		box-shadow: var(--mds-shadow);
 		overflow: hidden;
-		margin: var(--mds-gap) 0 var(--mds-gap) var(--mds-gap);
+		margin: var(--mds-gap);
+		width: var(--mds-sidebar);
+	}
+
+	#adminmenu,
+	#adminmenu .wp-submenu,
+	#adminmenuback,
+	#adminmenuwrap {
 		width: var(--mds-sidebar);
 	}
 
@@ -238,6 +254,12 @@ body.wp-admin.mds-skin {
 	}
 
 	// -------------------------------------------------------------- content
+
+	// The offset core sets for its own docked sidebar, corrected for ours.
+	#wpcontent,
+	#wpfooter {
+		margin-left: var(--mds-rail);
+	}
 
 	#wpcontent {
 		padding-left: var(--mds-gap);
@@ -535,12 +557,31 @@ body.wp-admin.mds-skin {
 	// Below 960px core collapses the sidebar to icons and shifts layout. The
 	// floating sidebar treatment fights that, so it reverts to core's.
 
+	// Folded sidebar: core collapses to a 36px icon rail and rewrites the
+	// offset, so ours has to follow rather than fight it.
+	&.folded {
+		--mds-sidebar: 36px;
+
+		#adminmenu .wp-submenu {
+			width: auto;
+		}
+	}
+
 	@media screen and (max-width: 960px) {
-		#adminmenuwrap {
+		--mds-rail: 0px;
+
+		#adminmenuwrap,
+		#adminmenuback,
+		#adminmenumain {
 			margin: 0;
 			border: 0;
 			border-radius: 0;
 			width: auto;
+		}
+
+		#wpcontent,
+		#wpfooter {
+			margin-left: 0;
 		}
 	}
 }

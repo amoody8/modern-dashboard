@@ -36,6 +36,7 @@ final class Settings {
 			'allow_site_admins'       => false,
 			'palette_enabled'         => false,
 			'skin_enabled'            => true,
+			'shell_enabled'           => true,
 			'stale_after'             => 2 * HOUR_IN_SECONDS,
 			'inactive_threshold_days' => 90,
 			'excluded_sites'          => array(),
@@ -100,6 +101,7 @@ final class Settings {
 			'allow_site_admins'       => (bool) ( $input['allow_site_admins'] ?? $defaults['allow_site_admins'] ),
 			'palette_enabled'         => (bool) ( $input['palette_enabled'] ?? $defaults['palette_enabled'] ),
 			'skin_enabled'            => (bool) ( $input['skin_enabled'] ?? $defaults['skin_enabled'] ),
+			'shell_enabled'           => (bool) ( $input['shell_enabled'] ?? $defaults['shell_enabled'] ),
 			'stale_after'             => max( 300, min( DAY_IN_SECONDS, (int) ( $input['stale_after'] ?? $defaults['stale_after'] ) ) ),
 			'inactive_threshold_days' => max( 1, min( 3650, (int) ( $input['inactive_threshold_days'] ?? $defaults['inactive_threshold_days'] ) ) ),
 			'excluded_sites'          => array_values( array_unique( array_filter( array_map( 'absint', (array) ( $input['excluded_sites'] ?? array() ) ) ) ) ),
@@ -131,6 +133,7 @@ final class Settings {
 			'allow_site_admins'       => array( 'type' => 'boolean' ),
 			'palette_enabled'         => array( 'type' => 'boolean' ),
 			'skin_enabled'            => array( 'type' => 'boolean' ),
+			'shell_enabled'           => array( 'type' => 'boolean' ),
 			'stale_after'             => array(
 				'type'    => 'integer',
 				'minimum' => 300,

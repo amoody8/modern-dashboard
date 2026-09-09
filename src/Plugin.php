@@ -23,6 +23,7 @@ use ModernDashboard\Menu\MenuApplier;
 use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
 use ModernDashboard\Admin\PaletteGate;
+use ModernDashboard\Admin\Shell;
 use ModernDashboard\Palette\CommandRegistry;
 use ModernDashboard\Palette\CommandResolver;
 use ModernDashboard\Palette\IndexBuilder;
@@ -157,6 +158,7 @@ final class Plugin {
 		( new ThemeRoutes( $this->themes() ) )->register();
 		( new ThemeRenderer( $this->themes() ) )->register();
 		( new AdminSkin( $this, $this->settings() ) )->register();
+		( new Shell( $this, $this->settings() ) )->register();
 		( new NetworkAdminPage() )->register();
 
 		$palette_gate = $this->palette_gate();
