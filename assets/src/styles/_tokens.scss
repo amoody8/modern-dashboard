@@ -132,13 +132,13 @@
 
 // Dark mode.
 //
-// Guarded on both the OS preference and an explicitly dark admin colour
-// scheme, matching what the plugin already did: WordPress users pick a scheme
-// per account, and honouring a dark OS while the admin around us is light
-// would leave this plugin looking broken rather than themed.
+// Requires a WordPress scheme that actually means "dark", or the explicit
+// opt-in class. `admin-color-modern` is WordPress's *default*, so pairing it
+// with a dark OS inferred a preference nobody expressed: anyone on a dark Mac
+// got a dark admin they never chose and could not turn off from here.
 @media (prefers-color-scheme: dark) {
-	body.admin-color-modern .modern-dashboard,
-	body.admin-color-midnight .modern-dashboard {
+	body.admin-color-midnight .modern-dashboard,
+	body.mds-dark .modern-dashboard {
 		--md-bg: #12141a;
 		--md-surface: #1a1d25;
 		--md-surface-sunken: #16181f;

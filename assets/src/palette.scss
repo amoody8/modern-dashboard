@@ -162,12 +162,12 @@
 	color: var(--md-muted);
 }
 
-// Same guard as the dashboard's dark block: the OS preference and an explicitly
-// dark admin colour scheme. No overlay tokens existed before, so they are
-// defined here rather than in dashboard.scss.
+// Overlay tokens for dark mode. Same gate as everywhere else: a WordPress
+// scheme that means "dark", or the explicit opt-in — never the default scheme
+// plus a dark OS, which is a preference nobody expressed.
 @media (prefers-color-scheme: dark) {
-	body.admin-color-modern .modern-dashboard,
-	body.admin-color-midnight .modern-dashboard {
+	body.admin-color-midnight .modern-dashboard,
+	body.mds-dark .modern-dashboard {
 		// Darker, not lighter: a pale scrim over a dark page reads as fog.
 		--md-scrim: rgba(0, 0, 0, 0.65);
 		// One step lighter than --md-surface. Elevation in a dark UI is

@@ -1267,21 +1267,6 @@
 	}
 }
 
-// WordPress applies its dark scheme via a body class rather than a media query,
-// so honour both: the user's OS preference and an explicitly dark admin scheme.
-@media (prefers-color-scheme: dark) {
-	body.admin-color-modern .modern-dashboard,
-	body.admin-color-midnight .modern-dashboard {
-		--md-bg: #1d2327;
-		--md-surface: #23282d;
-		--md-border: #3c434a;
-		--md-text: #f0f0f1;
-		--md-muted: #a7aaad;
-		--md-info-bg: #2a3540;
-		--md-good-bg: #1f3a30;
-		--md-warn-bg: #3d3320;
-		--md-bad-bg: #3d2426;
-		--md-chart-bar: #3987e5;
-		--md-chart-track: #2c3238;
-	}
-}
+// Dark mode lives in styles/_tokens.scss. This file used to carry its own copy,
+// which survived the move and then overrode the corrected one because it loads
+// later — a second source of truth for the same custom properties.

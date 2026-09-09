@@ -66,10 +66,17 @@
 	--mds-rail: calc(var(--mds-sidebar) + var(--mds-gap) * 2);
 }
 
-// The dark palette. Gated on the admin colour scheme rather than the OS alone:
-// a dark plugin inside a light admin looks broken, not themed.
-body.admin-color-modern,
-body.admin-color-midnight {
+// The dark palette.
+//
+// Deliberately NOT gated on `prefers-color-scheme` alone. `admin-color-modern`
+// is WordPress's default, so pairing it with a dark OS meant inferring a
+// preference nobody expressed — anyone on a dark Mac got a dark admin they
+// never asked for, and could not turn off without changing their OS.
+//
+// It now requires the one WordPress scheme that actually says "I want dark",
+// or an explicit opt-in via the setting, which adds `mds-dark`.
+body.admin-color-midnight,
+body.mds-dark {
 	@media (prefers-color-scheme: dark) {
 		--mds-bg: #131315;
 		--mds-surface: #18181b;
@@ -90,6 +97,28 @@ body.admin-color-midnight {
 		--mds-bad: #ef8378;
 		--mds-shadow: none;
 	}
+}
+
+// Chosen explicitly, so it does not wait on the OS.
+body.mds-dark {
+	--mds-bg: #131315;
+	--mds-surface: #18181b;
+	--mds-rail-bg: #131315;
+	--mds-sunken: #202023;
+	--mds-hover: #232326;
+	--mds-border: #2a2a2e;
+	--mds-border-soft: #232326;
+	--mds-border-strong: #3a3a3f;
+	--mds-text: #f2f2f3;
+	--mds-text-soft: #c4c4c7;
+	--mds-muted: #8a8a8e;
+	--mds-accent: #9d9bf5;
+	--mds-accent-hover: #b4b2f8;
+	--mds-accent-soft: #232149;
+	--mds-good: #45c491;
+	--mds-warn: #d9a25c;
+	--mds-bad: #ef8378;
+	--mds-shadow: none;
 }
 
 body.wp-admin.mds-skin {
