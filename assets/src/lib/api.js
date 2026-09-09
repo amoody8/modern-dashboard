@@ -6,19 +6,36 @@ import apiFetch from '@wordpress/api-fetch';
 
 const boot = window.modernDashboard || {};
 
-if ( boot.nonce ) {
-	apiFetch.use( apiFetch.createNonceMiddleware( boot.nonce ) );
-}
-
-if ( boot.root ) {
-	// `root` already includes the namespace, so paths passed below are relative
-	// to `modern-dashboard/v1`.
-	apiFetch.use(
-		apiFetch.createRootURLMiddleware( boot.root.replace( /\/?$/, '/' ) )
-	);
-}
+/** Root already includes the namespace; keep exactly one trailing slash. */
+const root = String( boot.root || '' ).replace( /\/?$/, '/' );
 
 export const config = boot;
+
+/**
+ * Call the plugin's REST namespace.
+ *
+ * Builds an absolute URL rather than registering root/nonce middleware.
+ * `wp-api-fetch` is a single shared script, so `apiFetch.use()` mutates state
+ * that core and every other plugin also use: two root-URL middlewares fight
+ * (the last registered wins, since `use()` prepends), and the loser's requests
+ * fall back to the bare `/wp-json/` root with the namespace stripped, 404ing
+ * every call. An absolute `url` bypasses the rewriting chain entirely.
+ *
+ * @param {string} path    Path relative to the namespace.
+ * @param {Object} options Extra apiFetch options.
+ *
+ * @return {Promise<Object>} The parsed response.
+ */
+function request( path, options = {} ) {
+	return apiFetch( {
+		...options,
+		url: root + path,
+		headers: {
+			...( options.headers || {} ),
+			...( boot.nonce ? { 'X-WP-Nonce': boot.nonce } : {} ),
+		},
+	} );
+}
 
 /**
  * Build a query string from defined, non-empty values only.
@@ -42,53 +59,50 @@ function query( params ) {
 
 export const api = {
 	overview: ( fresh = false ) =>
-		apiFetch( { path: `overview${ query( { fresh: fresh ? 1 : '' } ) }` } ),
+		request( `overview${ query( { fresh: fresh ? 1 : '' } ) }` ),
 
-	sites: ( params ) => apiFetch( { path: `sites${ query( params ) }` } ),
+	sites: ( params ) => request( `sites${ query( params ) }` ),
 
-	site: ( id ) => apiFetch( { path: `sites/${ id }` } ),
+	site: ( id ) => request( `sites/${ id }` ),
 
 	refreshSite: ( id ) =>
-		apiFetch( { path: `sites/${ id }/refresh`, method: 'POST' } ),
+		request( `sites/${ id }/refresh`, { method: 'POST' } ),
 
-	refreshBatch: () => apiFetch( { path: 'refresh', method: 'POST' } ),
+	refreshBatch: () => request( 'refresh', { method: 'POST' } ),
 
-	settings: () => apiFetch( { path: 'settings' } ),
+	settings: () => request( 'settings' ),
 
-	saveSettings: ( data ) =>
-		apiFetch( { path: 'settings', method: 'POST', data } ),
+	saveSettings: ( data ) => request( 'settings', { method: 'POST', data } ),
 
-	blocks: () => apiFetch( { path: 'blocks' } ),
+	blocks: () => request( 'blocks' ),
 
-	templates: () => apiFetch( { path: 'templates' } ),
+	templates: () => request( 'templates' ),
 
-	activeTemplate: () => apiFetch( { path: 'templates/active' } ),
+	activeTemplate: () => request( 'templates/active' ),
 
-	saveTemplate: ( data ) =>
-		apiFetch( { path: 'templates', method: 'POST', data } ),
+	saveTemplate: ( data ) => request( 'templates', { method: 'POST', data } ),
 
 	deleteTemplate: ( id ) =>
-		apiFetch( { path: `templates/${ id }`, method: 'DELETE' } ),
+		request( `templates/${ id }`, { method: 'DELETE' } ),
 
 	saveAssignments: ( data ) =>
-		apiFetch( { path: 'templates/assignments', method: 'POST', data } ),
+		request( 'templates/assignments', { method: 'POST', data } ),
 
-	menu: () => apiFetch( { path: 'menu' } ),
+	menu: () => request( 'menu' ),
 
-	saveMenu: ( data ) => apiFetch( { path: 'menu', method: 'POST', data } ),
+	saveMenu: ( data ) => request( 'menu', { method: 'POST', data } ),
 
-	resetMenuCatalogue: () =>
-		apiFetch( { path: 'menu/catalogue', method: 'DELETE' } ),
+	resetMenuCatalogue: () => request( 'menu/catalogue', { method: 'DELETE' } ),
 
-	theme: () => apiFetch( { path: 'theme' } ),
+	theme: () => request( 'theme' ),
 
-	saveTheme: ( data ) => apiFetch( { path: 'theme', method: 'POST', data } ),
+	saveTheme: ( data ) => request( 'theme', { method: 'POST', data } ),
 
-	siteTheme: ( id ) => apiFetch( { path: `theme/site/${ id }` } ),
+	siteTheme: ( id ) => request( `theme/site/${ id }` ),
 
 	saveSiteTheme: ( id, data ) =>
-		apiFetch( { path: `theme/site/${ id }`, method: 'POST', data } ),
+		request( `theme/site/${ id }`, { method: 'POST', data } ),
 
 	clearSiteTheme: ( id ) =>
-		apiFetch( { path: `theme/site/${ id }`, method: 'DELETE' } ),
+		request( `theme/site/${ id }`, { method: 'DELETE' } ),
 };
