@@ -51,6 +51,10 @@ distinctive titles, runs a collection batch, and creates two users:
 Then turn the palette on: **Network Dashboard → Settings → Access → Enable the
 command palette**. It is off by default.
 
+**Site administrators need `allow_site_admins` on** (Settings → Access) or they
+get no palette at all — which would make the checks below pass for the wrong
+reason. Turn it on before testing as `betaadmin`.
+
 ### The security checks — these block release
 
 Log in as **betaadmin** (not admin) at
@@ -126,6 +130,24 @@ Now log in as **admin** at `http://localhost:8888/wp-admin/network/`.
     OS to dark. Open the palette.
     → Expect a dark panel, not a white one. The tokens are gated on both
     conditions, so half a setup shows nothing.
+
+## Verified so far
+
+On a four-site wp-env network, 2026-09-09:
+
+- Indexed URLs are real and site-correct
+  (`/alpha/wp-admin/post.php?post=10&action=edit`) — the null-URL bug is fixed.
+- `betaadmin` searching `confidential` gets nothing while alpha's post exists;
+  finds their own site's content; cannot see alpha's draft; sees only Beta in
+  site results. The super admin gets the alpha post with a working link.
+- A second cron pass over unchanged sites writes nothing.
+- The palette opens in the browser and returns results — this needed the
+  apiFetch middleware fix, which no server-side test could catch, because
+  `rest_do_request()` never goes through apiFetch. **Read the browser console
+  before trusting a green server-side run.**
+
+Still unverified: clicking through to the destination, the block-editor
+shortcut handoff, Escape over SiteDetail, focus restore, and dark mode.
 
 ## Tearing down
 
