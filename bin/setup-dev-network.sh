@@ -36,8 +36,37 @@ for slug in alpha beta; do
 	wp post generate --count=5 --url="${url}" >/dev/null 2>&1 || true
 done
 
+# Distinctive titles, one per site, so a search result proves which site it came
+# from rather than looking plausible.
+alpha_url="$(wp site list --field=url | grep '/alpha/' | head -1)"
+beta_url="$(wp site list --field=url | grep '/beta/' | head -1)"
+
+wp post create --post_title="Alpha confidential roadmap" --post_status=publish --url="${alpha_url}" >/dev/null 2>&1 || true
+wp post create --post_title="Beta quarterly planning" --post_status=publish --url="${beta_url}" >/dev/null 2>&1 || true
+
+# A draft on alpha, authored by the super admin: the palette must not show its
+# title to anyone who cannot edit it.
+wp post create --post_title="Alpha unpublished salary review" --post_status=draft --url="${alpha_url}" >/dev/null 2>&1 || true
+
+echo "→ Creating a site administrator on beta only"
+# The point of this user: they are NOT a super admin and belong to exactly one
+# site, which is what the cross-tenant checks depend on.
+if ! wp user get betaadmin --field=user_login >/dev/null 2>&1; then
+	wp user create betaadmin betaadmin@example.com --role=none --user_pass=password >/dev/null
+fi
+wp user set-role betaadmin administrator --url="${beta_url}" >/dev/null 2>&1 || true
+
+echo "→ Collecting metrics and building the search index"
+wp cron event run modern_dashboard_refresh_batch >/dev/null 2>&1 || true
+
 echo
 wp site list --fields=blog_id,url,blogname
 echo
 echo "Network dashboard: http://localhost:8888/wp-admin/network/admin.php?page=modern-dashboard"
-echo "Log in as admin / password"
+echo
+echo "  admin / password        super admin, sees everything"
+echo "  betaadmin / password    administrator on beta ONLY — use this one to"
+echo "                          check that alpha's content stays invisible"
+echo
+echo "The command palette is off by default. Turn it on under"
+echo "Network Dashboard → Settings → Access, then press Cmd/Ctrl+K."
