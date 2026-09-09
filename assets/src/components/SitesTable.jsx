@@ -2,9 +2,16 @@
  * Sortable, filterable list of every site in the network.
  */
 
-import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { Badge, EmptyState, Field, Notice, Spinner } from './Primitives';
+import DataTable from './DataTable';
 import { api } from '../lib/api';
 import { attentionLabels } from '../lib/labels';
 import {
@@ -14,41 +21,100 @@ import {
 	formatRelative,
 } from '../lib/format';
 
-const COLUMNS = [
-	{ key: 'name', label: __( 'Site', 'modern-dashboard' ), sortable: true },
+/**
+ * Columns are fully declarative so DataTable can draw them: the renderer for a
+ * cell lives beside the column it belongs to, rather than in a parallel block
+ * of markup that has to be kept in the same order.
+ *
+ * @param {Object}   labels       Attention-reason labels.
+ * @param {Function} onSelectSite Called with a blog ID.
+ *
+ * @return {Object[]} Column definitions.
+ */
+const columnsFor = ( labels, onSelectSite ) => [
+	{
+		key: 'name',
+		label: __( 'Site', 'modern-dashboard' ),
+		render: ( site ) => (
+			<>
+				<button
+					type="button"
+					className="md-linkish md-site-name"
+					onClick={ () => onSelectSite( site.blog_id ) }
+				>
+					{ site.name }
+				</button>
+				<span className="md-site-address">
+					{ formatAddress( site.domain, site.path ) }
+				</span>
+				<span className="md-site-flags">
+					{ site.never_collected && (
+						<Badge tone="muted">
+							{ __( 'Not collected', 'modern-dashboard' ) }
+						</Badge>
+					) }
+					{ site.attention
+						.filter( ( reason ) => reason !== 'updates' )
+						.map( ( reason ) => {
+							const meta = labels[ reason ] || {
+								label: reason,
+								tone: 'muted',
+							};
+
+							return (
+								<Badge key={ reason } tone={ meta.tone }>
+									{ meta.label }
+								</Badge>
+							);
+						} ) }
+				</span>
+			</>
+		),
+	},
 	{
 		key: 'users',
 		label: __( 'Users', 'modern-dashboard' ),
-		sortable: true,
+		align: 'end',
 		numeric: true,
+		render: ( site ) => formatNumber( site.totals.users ),
 	},
 	{
 		key: 'content',
 		label: __( 'Content', 'modern-dashboard' ),
-		sortable: true,
+		align: 'end',
 		numeric: true,
+		render: ( site ) => formatNumber( site.totals.content ),
 	},
 	{
 		key: 'updates',
 		label: __( 'Updates', 'modern-dashboard' ),
-		sortable: true,
+		align: 'end',
 		numeric: true,
+		render: ( site ) =>
+			site.totals.updates > 0 ? (
+				<Badge tone="warn">
+					{ formatNumber( site.totals.updates ) }
+				</Badge>
+			) : (
+				formatNumber( site.totals.updates )
+			),
 	},
 	{
 		key: 'storage',
 		label: __( 'Uploads', 'modern-dashboard' ),
-		sortable: true,
+		align: 'end',
 		numeric: true,
+		render: ( site ) => formatBytes( site.totals.storage ),
 	},
 	{
 		key: 'last_published',
 		label: __( 'Last post', 'modern-dashboard' ),
-		sortable: true,
+		render: ( site ) => formatRelative( site.content?.last_published ),
 	},
 	{
 		key: 'collected_at',
 		label: __( 'Collected', 'modern-dashboard' ),
-		sortable: true,
+		render: ( site ) => formatRelative( site.collected_at ),
 	},
 ];
 
@@ -68,32 +134,6 @@ const FLAGS = () => [
 	{ value: 'inactive', label: __( 'Inactive', 'modern-dashboard' ) },
 	{ value: 'stale', label: __( 'Stale data', 'modern-dashboard' ) },
 ];
-
-/**
- * @param {boolean} active Whether the column is the active sort column.
- * @param {string}  order  Current sort direction.
- * @return {string} An `aria-sort` value.
- */
-function ariaSort( active, order ) {
-	if ( ! active ) {
-		return 'none';
-	}
-
-	return order === 'asc' ? 'ascending' : 'descending';
-}
-
-/**
- * @param {boolean} active Whether the column is the active sort column.
- * @param {string}  order  Current sort direction.
- * @return {string} A direction arrow, or an empty string when inactive.
- */
-function sortArrow( active, order ) {
-	if ( ! active ) {
-		return '';
-	}
-
-	return order === 'asc' ? '\u25b2' : '\u25bc';
-}
 
 export default function SitesTable( {
 	onSelectSite,
@@ -175,11 +215,18 @@ export default function SitesTable( {
 		setQuery( ( current ) => ( { ...current, page } ) );
 	}, [] );
 
+	const labels = attentionLabels();
+
+	// Above the error guard: a hook after an early return is skipped on the
+	// render that takes it, which changes hook order between renders.
+	const columns = useMemo(
+		() => columnsFor( labels, onSelectSite ),
+		[ labels, onSelectSite ]
+	);
+
 	if ( error ) {
 		return <Notice tone="bad">{ error }</Notice>;
 	}
-
-	const labels = attentionLabels();
 
 	return (
 		<div className="md-sites">
@@ -280,150 +327,20 @@ export default function SitesTable( {
 			) }
 
 			{ result && result.items.length > 0 && (
-				<div
-					className={
-						loading
-							? 'md-table-wrap is-refreshing'
-							: 'md-table-wrap'
-					}
-				>
-					<table className="md-table">
-						<thead>
-							<tr>
-								{ COLUMNS.map( ( column ) => {
-									const active = query.orderby === column.key;
-
-									return (
-										<th
-											key={ column.key }
-											className={
-												column.numeric
-													? 'md-numeric'
-													: undefined
-											}
-											aria-sort={ ariaSort(
-												active,
-												query.order
-											) }
-										>
-											{ column.sortable ? (
-												<button
-													type="button"
-													className="md-sort"
-													onClick={ () =>
-														sortBy( column.key )
-													}
-												>
-													{ column.label }
-													<span
-														aria-hidden="true"
-														className="md-sort__arrow"
-													>
-														{ sortArrow(
-															active,
-															query.order
-														) }
-													</span>
-												</button>
-											) : (
-												column.label
-											) }
-										</th>
-									);
-								} ) }
-							</tr>
-						</thead>
-						<tbody>
-							{ result.items.map( ( site ) => (
-								<tr
-									key={ site.blog_id }
-									className={
-										site.blog_id === selectedId
-											? 'is-selected'
-											: undefined
-									}
-								>
-									<td>
-										<button
-											type="button"
-											className="md-linkish md-site-name"
-											onClick={ () =>
-												onSelectSite( site.blog_id )
-											}
-										>
-											{ site.name }
-										</button>
-										<span className="md-site-address">
-											{ formatAddress(
-												site.domain,
-												site.path
-											) }
-										</span>
-										<span className="md-site-flags">
-											{ site.never_collected && (
-												<Badge tone="muted">
-													{ __(
-														'Not collected',
-														'modern-dashboard'
-													) }
-												</Badge>
-											) }
-											{ site.attention
-												.filter(
-													( reason ) =>
-														reason !== 'updates'
-												)
-												.map( ( reason ) => {
-													const meta = labels[
-														reason
-													] || {
-														label: reason,
-														tone: 'muted',
-													};
-
-													return (
-														<Badge
-															key={ reason }
-															tone={ meta.tone }
-														>
-															{ meta.label }
-														</Badge>
-													);
-												} ) }
-										</span>
-									</td>
-									<td className="md-numeric">
-										{ formatNumber( site.totals.users ) }
-									</td>
-									<td className="md-numeric">
-										{ formatNumber( site.totals.content ) }
-									</td>
-									<td className="md-numeric">
-										{ site.totals.updates > 0 ? (
-											<Badge tone="warn">
-												{ formatNumber(
-													site.totals.updates
-												) }
-											</Badge>
-										) : (
-											formatNumber( site.totals.updates )
-										) }
-									</td>
-									<td className="md-numeric">
-										{ formatBytes( site.totals.storage ) }
-									</td>
-									<td>
-										{ formatRelative(
-											site.content?.last_published
-										) }
-									</td>
-									<td>
-										{ formatRelative( site.collected_at ) }
-									</td>
-								</tr>
-							) ) }
-						</tbody>
-					</table>
+				<div className={ loading ? 'is-refreshing' : undefined }>
+					<DataTable
+						columns={ columns }
+						rows={ result.items }
+						rowKey={ ( site ) => site.blog_id }
+						orderby={ query.orderby }
+						order={ query.order }
+						onSort={ sortBy }
+						isSelected={ ( site ) => site.blog_id === selectedId }
+						caption={ __(
+							'Sites in this network',
+							'modern-dashboard'
+						) }
+					/>
 				</div>
 			) }
 
