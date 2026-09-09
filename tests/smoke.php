@@ -57,7 +57,9 @@ function wp_rand( $min = 0, $max = PHP_INT_MAX ) { return random_int( $min, min(
 function translate_user_role( $r ) { return $r; }
 function is_multisite() { return true; }
 function is_network_admin() { return $GLOBALS['is_network_admin'] ?? false; }
-function is_user_admin() { return false; }
+function is_user_admin() { return $GLOBALS['is_user_admin'] ?? false; }
+function is_user_logged_in() { return $GLOBALS['logged_in'] ?? true; }
+function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
 function current_user_can( $cap ) { return ! empty( $GLOBALS['user_caps'][ $cap ] ); }
 function get_current_user_id() { return $GLOBALS['current_user_id'] ?? 1; }
 function get_post_types( $args = [], $output = 'names' ) { return [ 'post' => 'post', 'page' => 'page', 'attachment' => 'attachment' ]; }
@@ -757,6 +759,41 @@ check( 'current site is not duplicated from the index', array_column( $beta_view
 
 $GLOBALS['user_caps']       = [];
 $GLOBALS['current_blog'] = 1;
+
+// --- PaletteGate ------------------------------------------------------------
+
+echo "\nPaletteGate\n";
+
+$GLOBALS['user_caps'] = [ 'manage_options' => true, 'manage_network_dashboard' => true ];
+$_GET                 = [];
+
+$gate_settings = new Settings();
+$gate_settings->update( [ 'palette_enabled' => false ] );
+check( 'disabled by default', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->should_load(), false );
+
+$gate_settings->update( [ 'palette_enabled' => true ] );
+check( 'loads once enabled', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->should_load(), true );
+
+$_GET = [ 'mdash-palette' => 'off' ];
+check( 'bypass argument suppresses it', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->should_load(), false );
+
+$GLOBALS['user_caps'] = [];
+check( 'bypass needs manage_options', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->bypassed(), false );
+
+$_GET                 = [];
+$GLOBALS['user_caps'] = [];
+check( 'a user with no capability gets nothing', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->should_load(), false );
+
+$GLOBALS['user_caps']    = [ 'manage_network_dashboard' => true ];
+$GLOBALS['is_user_admin'] = true;
+check( 'never loads in the user-admin context', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->should_load(), false );
+$GLOBALS['is_user_admin'] = false;
+
+$GLOBALS['logged_in'] = false;
+check( 'never loads for a logged-out request', ( new ModernDashboard\Admin\PaletteGate( $gate_settings ) )->should_load(), false );
+$GLOBALS['logged_in'] = true;
+
+$GLOBALS['user_caps'] = [];
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail === 0 ? 0 : 1 );

@@ -22,8 +22,16 @@ use ModernDashboard\Data\Store;
 use ModernDashboard\Menu\MenuApplier;
 use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
+use ModernDashboard\Admin\PaletteGate;
+use ModernDashboard\Palette\CommandRegistry;
+use ModernDashboard\Palette\CommandResolver;
+use ModernDashboard\Palette\IndexBuilder;
+use ModernDashboard\Palette\LiveSearch;
+use ModernDashboard\Palette\SearchController;
+use ModernDashboard\Palette\SearchIndex;
 use ModernDashboard\Rest\BuilderRoutes;
 use ModernDashboard\Rest\MenuRoutes;
+use ModernDashboard\Rest\PaletteRoutes;
 use ModernDashboard\Rest\ThemeRoutes;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
@@ -48,6 +56,9 @@ final class Plugin {
 	private ?MenuCatalogue $catalogue      = null;
 	private ?MenuRules $menu_rules         = null;
 	private ?ThemeRepository $themes       = null;
+	private ?CommandRegistry $commands     = null;
+	private ?SearchIndex $search_index     = null;
+	private ?PaletteGate $palette_gate     = null;
 
 	public function __construct( string $file, string $version ) {
 		$this->file    = $file;
@@ -102,6 +113,18 @@ final class Plugin {
 		return $this->themes ??= new ThemeRepository();
 	}
 
+	public function commands(): CommandRegistry {
+		return $this->commands ??= new CommandRegistry();
+	}
+
+	public function search_index(): SearchIndex {
+		return $this->search_index ??= new SearchIndex();
+	}
+
+	public function palette_gate(): PaletteGate {
+		return $this->palette_gate ??= new PaletteGate( $this->settings() );
+	}
+
 	public function templates(): TemplateRepository {
 		return $this->templates ??= new TemplateRepository(
 			$this->registry(),
@@ -133,7 +156,21 @@ final class Plugin {
 		( new ThemeRoutes( $this->themes() ) )->register();
 		( new ThemeRenderer( $this->themes() ) )->register();
 		( new NetworkAdminPage() )->register();
-		( new Assets( $this ) )->register();
+
+		$palette_gate = $this->palette_gate();
+		$palette_gate->register();
+
+		( new PaletteRoutes(
+			new CommandResolver( $this->commands() ),
+			new SearchController( $this->search_index(), new LiveSearch(), $this->repository() )
+		) )->register();
+
+		// Registers unconditionally and checks the setting when the hook fires,
+		// so switching the palette on does not wait for a request that happens
+		// to re-register hooks.
+		( new IndexBuilder( $this->search_index(), $this->settings() ) )->register();
+
+		( new Assets( $this, $palette_gate ) )->register();
 
 		// Deliberately on `init`: loading a textdomain earlier makes WordPress
 		// complain about just-in-time translation loading.

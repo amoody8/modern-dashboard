@@ -21,65 +21,148 @@ final class Assets {
 
 	private const HANDLE = 'modern-dashboard';
 
-	private Plugin $plugin;
+	private const PALETTE_HANDLE = 'modern-dashboard-palette';
 
-	public function __construct( Plugin $plugin ) {
+	private Plugin $plugin;
+	private PaletteGate $gate;
+
+	public function __construct( Plugin $plugin, PaletteGate $gate ) {
 		$this->plugin = $plugin;
+		$this->gate   = $gate;
 	}
 
 	public function register(): void {
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_app' ) );
+
+		// Later than the app so that on the plugin's own screens, where both
+		// load, the emitted order stays stable.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_palette' ), 20 );
 	}
 
-	public function enqueue( string $hook_suffix ): void {
+	public function enqueue_app( string $hook_suffix ): void {
 		if ( ! in_array( $hook_suffix, NetworkAdminPage::hooks(), true ) ) {
 			return;
 		}
 
-		$build = $this->plugin->dir() . 'build/';
-		$asset = $build . 'index.asset.php';
+		$meta = $this->asset_meta( 'index' );
 
-		if ( ! is_readable( $build . 'index.js' ) ) {
+		if ( null === $meta ) {
 			add_action( 'admin_notices', array( $this, 'render_missing_build_notice' ) );
 			add_action( 'network_admin_notices', array( $this, 'render_missing_build_notice' ) );
 
 			return;
 		}
 
-		$meta = is_readable( $asset )
-			? (array) require $asset
-			: array(
-				'dependencies' => array( 'wp-element', 'wp-i18n', 'wp-api-fetch' ),
-				'version'      => $this->plugin->version(),
-			);
-
-		wp_enqueue_script(
-			self::HANDLE,
-			$this->plugin->url() . 'build/index.js',
-			$meta['dependencies'],
-			(string) $meta['version'],
-			true
-		);
-
-		if ( is_readable( $build . 'index.css' ) ) {
-			wp_enqueue_style(
-				self::HANDLE,
-				$this->plugin->url() . 'build/index.css',
-				array(),
-				(string) $meta['version']
-			);
-
-			// The build emits index-rtl.css alongside it; let WordPress swap in
-			// the right one for right-to-left locales.
-			wp_style_add_data( self::HANDLE, 'rtl', 'replace' );
-		}
-
-		wp_set_script_translations( self::HANDLE, 'modern-dashboard', $this->plugin->dir() . 'languages' );
+		$this->enqueue_entry( self::HANDLE, 'index', $meta );
 
 		wp_add_inline_script(
 			self::HANDLE,
 			'window.modernDashboard = ' . wp_json_encode( $this->boot_data() ) . ';',
 			'before'
+		);
+	}
+
+	/**
+	 * The palette loads on every admin screen, so this runs on requests that
+	 * have nothing to do with the dashboard. Everything it does is either
+	 * already computed for other reasons or a constant.
+	 */
+	public function enqueue_palette(): void {
+		if ( ! $this->gate->should_load() ) {
+			return;
+		}
+
+		$meta = $this->asset_meta( 'palette' );
+
+		// A missing palette build degrades to no palette rather than a notice:
+		// this runs on every screen of every site, and nagging there would be
+		// worse than the thing it reports.
+		if ( null === $meta ) {
+			return;
+		}
+
+		$this->enqueue_entry( self::PALETTE_HANDLE, 'palette', $meta );
+
+		wp_add_inline_script(
+			self::PALETTE_HANDLE,
+			'window.modernDashboardPalette = ' . wp_json_encode( $this->palette_boot_data() ) . ';',
+			'before'
+		);
+	}
+
+	/**
+	 * Dependencies and version for one build entry.
+	 *
+	 * @return array{dependencies:string[],version:string}|null Null when the entry is missing.
+	 */
+	private function asset_meta( string $entry ): ?array {
+		$build = $this->plugin->dir() . 'build/';
+
+		if ( ! is_readable( $build . $entry . '.js' ) ) {
+			return null;
+		}
+
+		$asset = $build . $entry . '.asset.php';
+
+		if ( ! is_readable( $asset ) ) {
+			return array(
+				'dependencies' => array( 'wp-element', 'wp-i18n', 'wp-api-fetch' ),
+				'version'      => $this->plugin->version(),
+			);
+		}
+
+		/** @var array{dependencies:string[],version:string} $meta */
+		$meta = (array) require $asset;
+
+		return $meta;
+	}
+
+	/**
+	 * @param array{dependencies:string[],version:string} $meta Build metadata.
+	 */
+	private function enqueue_entry( string $handle, string $entry, array $meta ): void {
+		$build = $this->plugin->dir() . 'build/';
+
+		wp_enqueue_script(
+			$handle,
+			$this->plugin->url() . 'build/' . $entry . '.js',
+			$meta['dependencies'],
+			(string) $meta['version'],
+			true
+		);
+
+		if ( is_readable( $build . $entry . '.css' ) ) {
+			wp_enqueue_style(
+				$handle,
+				$this->plugin->url() . 'build/' . $entry . '.css',
+				array(),
+				(string) $meta['version']
+			);
+
+			// The build emits an -rtl.css alongside it; let WordPress swap in
+			// the right one for right-to-left locales.
+			wp_style_add_data( $handle, 'rtl', 'replace' );
+		}
+
+		wp_set_script_translations( $handle, 'modern-dashboard', $this->plugin->dir() . 'languages' );
+	}
+
+	/**
+	 * Deliberately smaller than the app payload: no settings read (the gate has
+	 * already made the one decision that needed it), no links (destinations come
+	 * from the commands endpoint), and no capability flags (the endpoints
+	 * authorize; shipping flags would only invite the client to guess).
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function palette_boot_data(): array {
+		return array(
+			'root'      => esc_url_raw( rest_url( Routes::NAMESPACE ) ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
+			'blogId'    => get_current_blog_id(),
+			'isNetwork' => is_network_admin(),
+			'bypassArg' => PaletteGate::BYPASS_ARG,
+			'version'   => $this->plugin->version(),
 		);
 	}
 
