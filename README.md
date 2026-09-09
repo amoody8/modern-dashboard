@@ -12,11 +12,12 @@ markup, or assets.
 
 ## Status
 
-**v0.4.0 — all four pillars.** Metrics collection, the network overview, the
+**v0.5.0 — five pillars.** Metrics collection, the network overview, the
 site list with drill-down, network-controlled settings, a drag-and-drop
 dashboard builder whose templates are assigned by role, a network-defined admin
-menu editor, and branding for the admin chrome and login screen. What remains is
-depth rather than new pillars; see [Roadmap](#roadmap).
+menu editor, branding for the admin chrome and login screen, and a command
+palette that searches the network from any admin screen. What remains is depth
+rather than new pillars; see [Roadmap](#roadmap).
 
 ## Requirements
 
@@ -55,6 +56,10 @@ once at the network level and applied on every site. Submenus too.
 **Branding.** Admin chrome colours, login screen, and white-label text (footer,
 greeting, WordPress logo), set network-wide with per-site overrides. Includes a
 live preview and WCAG contrast warnings on every foreground/background pair.
+
+**Command palette.** `Cmd/Ctrl+K` on any admin screen: search commands, sites,
+and content, and jump straight there. Off by default — see
+[The command palette](#the-command-palette).
 
 **Network-controlled settings.** Collection interval and batch size, storage
 scanning on/off with a per-site time budget, staleness and inactivity
@@ -248,13 +253,24 @@ src/
     MetricsRepository.php     Read, refresh, filter, sort, paginate
     NetworkAggregator.php     Network rollup
     Collectors/               Content, Users, Updates, Storage
+  Palette/
+    CommandRegistry.php       Command catalogue, filterable
+    CommandResolver.php       Capability and context filtering
+    SearchIndex.php           Cross-network index storage
+    IndexBuilder.php          Fills it, riding the collection batch
+    LiveSearch.php            Current-site query, live
+    SearchController.php      Assembles a response; owns the tenant boundary
   Cron/Scheduler.php          Batched background refresh
   Rest/Routes.php             modern-dashboard/v1
   Rest/BuilderRoutes.php      Builder endpoints in the same namespace
   Rest/MenuRoutes.php         Menu catalogue and rules endpoints
   Rest/ThemeRoutes.php        Branding endpoints
+  Rest/PaletteRoutes.php      Command palette endpoints
+  Rest/Guard.php              Shared REST permission callbacks
   Admin/                      Menu pages and asset loading
 assets/src/                   React app (source)
+  palette.js                  Palette entry (second bundle)
+  palette/                    Overlay, focus trap, hotkey, results
   blocks/                     One renderer per block type
   builder/                    Canvas, palette, inspector, role assignment
   menu/                       Menu editor
@@ -270,6 +286,48 @@ of it is `__experimental*` and churns between releases. Only stable React APIs
 are used (`createRoot`, hooks, no `defaultProps`), so the app is unaffected by
 core's React version moving underneath it. All CSS is scoped under
 `.modern-dashboard` to survive WordPress's unscoped admin stylesheet.
+
+### The command palette
+
+`Cmd/Ctrl+K` opens it on any admin screen; `Cmd/Ctrl+Shift+P` does the same and
+never conflicts. It is **off by default** and switched on under *Settings →
+Access*, because it is the one part of this plugin that puts JavaScript on every
+admin screen of every site.
+
+**What it searches.** Commands (admin destinations, network screens, this
+plugin's own tabs), sites, and content. Content comes from two places at once:
+a live query against the site you are on, and — for network administrators — a
+background index of the rest of the network. Local results win ties, since the
+thing you are looking for is usually where you already are.
+
+**Cross-network content search is network-administrator only, deliberately.**
+Whether someone may read a post on another site depends on that site's
+`map_meta_cap` and `user_has_cap` filters, and those only exist while that
+site's plugins are loaded — `switch_to_blog()` does not load them. A permission
+check made from outside a site is therefore structurally unreliable, and a
+capability snapshot taken at index time goes stale the moment access is revoked.
+So the boundary is the capability itself, checked before the index is read at
+all. A site administrator still gets excellent search over their own site: it
+runs live under their own session, so it is both fresher and more correct than
+an index would be.
+
+**It stands down inside the block editor.** WordPress core has bound
+`Cmd/Ctrl+K` to its own command palette since 6.3, and the block editor binds it
+to "insert link". The palette declines the shortcut whenever the cursor is in a
+field or an editor surface, so those keep working. `Cmd/Ctrl+Shift+P` still
+opens it there. Since 6.3 the editor canvas is an iframe whose keydowns never
+reach the page, so neither shortcut fires while the cursor is inside the canvas
+— that is a known limit, not a bug.
+
+**Turning it off.** Three ways, in increasing permanence: `?mdash-palette=off`
+disables it for one page load (any user who can `manage_options`);
+`localStorage.setItem( 'mdash-palette', 'off' )` disables it for one browser;
+the network setting disables it everywhere.
+
+**Scale.** The index rides the existing collection cron, so it costs no extra
+scheduling. Above 500 sites, network-wide *content* search switches off and only
+site names stay searchable — the palette says so rather than quietly returning
+less than you expect.
 
 ## REST API
 
@@ -294,6 +352,8 @@ when the network allows it.
 | `/menu/catalogue` | DELETE | Clear the catalogue so it rebuilds from scratch |
 | `/theme` | GET / POST | The network-wide branding |
 | `/theme/site/{id}` | GET / POST / DELETE | One site's branding override |
+| `/palette/commands` | GET | Commands available to the current user, with group labels |
+| `/palette/search` | GET | `term`, `types`, `limit`. Live, indexed and site results |
 
 ## Extending
 
@@ -421,6 +481,15 @@ parts before switching either on.
 
 ## Development
 
+The front end builds **two entries**: the dashboard app (`index.js`) and the
+command palette (`palette.js`), which loads on every admin screen and so is kept
+small and dependency-free. `wp-scripts` accepts them as positional arguments —
+no `webpack.config.js` needed — and emits a separate `.asset.php` for each. That
+works because `--output-path` is not one of the flags `wp-scripts` treats as an
+output option; CI asserts both bundles exist in case that ever changes. The
+fallback, if it does, is a root `webpack.config.js` spreading
+`@wordpress/scripts/config/webpack.config` with an explicit `entry` map.
+
 ```bash
 npm install
 npm run build          # production build into build/
@@ -467,6 +536,14 @@ composer test          # PHP smoke tests, no WordPress install needed
   chrome; it does not move or restructure it.
 - **A per-site branding override replaces the network theme**, it does not merge
   with it. See the note above.
+- **The palette does not open inside the block editor canvas.** The canvas is an
+  iframe and its keydowns never reach the page. `Cmd/Ctrl+Shift+P` works from
+  the editor's own chrome, outside the canvas.
+- **Network-wide content search is for network administrators only**, and is
+  suppressed entirely above 500 sites. Both are deliberate; see
+  [The command palette](#the-command-palette).
+- **Indexed results lag the collection interval.** The site you are on is always
+  searched live, so the common case is current.
 
 ## Roadmap
 
@@ -481,6 +558,9 @@ Ordered by what a network actually needs next, not by UiPress feature order.
    inactive sites) from the site list.
 4. **Branding presets** — save a colour scheme once and apply it to a set of
    sites, rather than re-entering it per site.
+5. **Register commands into core's palette** — inside the block editor, feed the
+   same command registry to `core/commands` so one set of commands works
+   whichever palette is open.
 
 ## Licence
 

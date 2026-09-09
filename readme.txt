@@ -4,7 +4,7 @@ Tags: multisite, network, dashboard, admin, white-label
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -46,6 +46,18 @@ Set the admin menu and toolbar colours, the login screen, and white-label text �
 
 The editor shows a live preview and checks the contrast of every text-on-background pair as you choose colours, so an unreadable scheme is caught before you save it rather than after. If one slips through anyway, adding ?mdash-theme=off to any admin URL shows the unbranded admin.
 
+= Command palette =
+
+Press Cmd/Ctrl+K on any admin screen to search commands, sites and content, and jump straight to what you found. Cmd/Ctrl+Shift+P does the same and never conflicts with anything.
+
+It is off by default and enabled under Settings → Access, because it is the one part of this plugin that loads on every admin screen of every site.
+
+Content search works two ways at once: a live query against the site you are on, always current, and — for network administrators — a background index of the rest of the network. Cross-network content search is limited to network administrators by design. Whether someone may read a post on another site depends on that site's own capability filters, which only exist while that site's plugins are loaded, so a permission check made from outside the site cannot be trusted. Site administrators still get full search of their own site, run live under their own session.
+
+Inside the block editor, Cmd/Ctrl+K stays with the editor's own link shortcut and WordPress core's palette; use Cmd/Ctrl+Shift+P instead. The editor canvas is an iframe whose keystrokes never reach the page, so neither shortcut opens the palette while the cursor is inside it.
+
+To switch it off: ?mdash-palette=off for one page load, localStorage.setItem('mdash-palette','off') for one browser, or the network setting for everyone.
+
 = Network-controlled =
 
 The network admin sets the collection schedule, builds the dashboards, decides which role sees which one, picks which sites are excluded, and chooses whether site administrators may see their own site's numbers. Individual sites inherit those decisions.
@@ -85,6 +97,17 @@ Yes. Pick the site in the Branding tab and give it its own theme. A site overrid
 Only if you let them. When enabled, a site administrator sees a read-only view of their own site under **Dashboard → Site Metrics** and nothing about the rest of the network.
 
 == Changelog ==
+
+= 0.5.0 =
+* Added the command palette: Cmd/Ctrl+K (or Cmd/Ctrl+Shift+P) on any admin screen, searching commands, sites and content.
+* Off by default; enable it under Settings → Access. It ships as its own small bundle so the dashboard app is not loaded network-wide.
+* Content search is hybrid: a live query against the current site, plus a background index of the rest of the network for network administrators.
+* Cross-network content search is limited to network administrators, because a site's capability filters cannot be evaluated from outside that site.
+* The index rides the existing collection batch rather than scheduling its own cron, and is suppressed above 500 sites, which the palette reports rather than silently returning less.
+* Commands are registered through a filter and capability-checked server-side, so a command a user cannot run is never sent to their browser.
+* ?mdash-palette=off, a localStorage kill switch and an error boundary each disable it independently.
+* Dashboard tabs now reflect in the URL fragment, so they are linkable and the back button works.
+* Internal: the four duplicated REST permission callbacks are now a shared trait.
 
 = 0.4.0 =
 * Added branding: admin chrome colours, login screen styling, custom login logo, and white-label footer, greeting and toolbar logo.

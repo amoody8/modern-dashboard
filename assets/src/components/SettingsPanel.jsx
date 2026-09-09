@@ -256,6 +256,17 @@ export default function SettingsPanel( { onSaved } ) {
 					}
 				/>
 
+				<Checkbox
+					label={ __(
+						'Enable the command palette — Cmd/Ctrl+K on every admin screen, searching sites, content and admin screens. Network-wide content search stays limited to network administrators.',
+						'modern-dashboard'
+					) }
+					checked={ settings.palette_enabled }
+					onChange={ ( event ) =>
+						set( 'palette_enabled', event.target.checked )
+					}
+				/>
+
 				<Field
 					label={ __( 'Excluded site IDs', 'modern-dashboard' ) }
 					help={ __(

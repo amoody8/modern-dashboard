@@ -51,5 +51,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      # wp-scripts takes entry points as positional arguments, which works only
+      # because --output-path is not one of the flags it treats as an output
+      # option. That is undocumented, so assert both entries actually built
+      # rather than letting a silent one-entry build reach the staleness check.
+      - name: Verify both bundles built
+        run: |
+          test -f build/index.js
+          test -f build/index.asset.php
+          test -f build/palette.js
+          test -f build/palette.asset.php
+
       - name: Fail if the committed build is stale
         run: git diff --exit-code -- build/

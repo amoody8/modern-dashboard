@@ -44,10 +44,21 @@ const TABS = () => [
 	},
 ];
 
+/**
+ * The tab named by the URL fragment, when it is one we actually have.
+ *
+ * @return {string} Tab key.
+ */
+function tabFromHash() {
+	const key = window.location.hash.replace( /^#/, '' );
+
+	return TABS().some( ( item ) => item.key === key ) ? key : 'overview';
+}
+
 export default function App() {
 	const canManage = Boolean( config.canManage );
 
-	const [ tab, setTab ] = useState( 'overview' );
+	const [ tab, setTab ] = useState( tabFromHash );
 	const [ overview, setOverview ] = useState( null );
 	const [ template, setTemplate ] = useState( null );
 	const [ loading, setLoading ] = useState( true );
@@ -56,6 +67,24 @@ export default function App() {
 	const [ refreshToken, setRefreshToken ] = useState( 0 );
 	const [ collecting, setCollecting ] = useState( false );
 	const [ message, setMessage ] = useState( null );
+
+	// The palette navigates here with a #tab fragment, and reflecting the tab in
+	// the URL also makes these screens linkable and the back button work.
+	useEffect( () => {
+		const onHashChange = () => setTab( tabFromHash() );
+
+		window.addEventListener( 'hashchange', onHashChange );
+
+		return () => window.removeEventListener( 'hashchange', onHashChange );
+	}, [] );
+
+	const selectTab = useCallback( ( key ) => {
+		setTab( key );
+
+		if ( window.location.hash !== `#${ key }` ) {
+			window.history.replaceState( null, '', `#${ key }` );
+		}
+	}, [] );
 
 	const loadOverview = useCallback( ( fresh = false ) => {
 		setLoading( true );
@@ -211,7 +240,7 @@ export default function App() {
 							aria-current={
 								tab === item.key ? 'page' : undefined
 							}
-							onClick={ () => setTab( item.key ) }
+							onClick={ () => selectTab( item.key ) }
 						>
 							{ item.label }
 						</button>
