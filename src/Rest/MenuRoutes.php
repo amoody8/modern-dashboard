@@ -13,8 +13,6 @@ use ModernDashboard\Builder\TemplateRepository;
 use ModernDashboard\Menu\MenuApplier;
 use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
-use ModernDashboard\Support\Capabilities;
-use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -22,6 +20,8 @@ use WP_REST_Server;
 defined( 'ABSPATH' ) || exit;
 
 final class MenuRoutes {
+
+	use Guard;
 
 	private MenuCatalogue $catalogue;
 	private MenuRules $rules;
@@ -71,17 +71,6 @@ final class MenuRoutes {
 		);
 	}
 
-	public function can_manage(): bool|WP_Error {
-		if ( Capabilities::can_manage() ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'modern_dashboard_forbidden',
-			__( 'You need network administrator access to edit admin menus.', 'modern-dashboard' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
-	}
 
 	public function get_menu(): WP_REST_Response {
 		$catalogue = $this->catalogue->all();

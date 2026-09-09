@@ -28,6 +28,8 @@ defined( 'ABSPATH' ) || exit;
 
 final class Routes {
 
+	use Guard;
+
 	public const NAMESPACE = 'modern-dashboard/v1';
 
 	private MetricsRepository $repository;
@@ -171,17 +173,6 @@ final class Routes {
 		);
 	}
 
-	public function can_manage(): bool|WP_Error {
-		if ( Capabilities::can_manage() ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'modern_dashboard_forbidden',
-			__( 'You need network administrator access to use the network dashboard.', 'modern-dashboard' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
-	}
 
 	/**
 	 * Network admins read any site. A site administrator may read their own
@@ -198,10 +189,8 @@ final class Routes {
 			return true;
 		}
 
-		return new WP_Error(
-			'modern_dashboard_forbidden',
-			__( 'You are not allowed to read this site\'s dashboard data.', 'modern-dashboard' ),
-			array( 'status' => rest_authorization_required_code() )
+		return $this->forbidden(
+			__( 'You are not allowed to read this site\'s dashboard data.', 'modern-dashboard' )
 		);
 	}
 

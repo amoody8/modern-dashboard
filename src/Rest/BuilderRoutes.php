@@ -15,7 +15,6 @@ namespace ModernDashboard\Rest;
 
 use ModernDashboard\Builder\BlockRegistry;
 use ModernDashboard\Builder\TemplateRepository;
-use ModernDashboard\Support\Capabilities;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -24,6 +23,8 @@ use WP_REST_Server;
 defined( 'ABSPATH' ) || exit;
 
 final class BuilderRoutes {
+
+	use Guard;
 
 	private BlockRegistry $registry;
 	private TemplateRepository $templates;
@@ -112,29 +113,7 @@ final class BuilderRoutes {
 		);
 	}
 
-	public function can_manage(): bool|WP_Error {
-		if ( Capabilities::can_manage() ) {
-			return true;
-		}
 
-		return new WP_Error(
-			'modern_dashboard_forbidden',
-			__( 'You need network administrator access to edit dashboards.', 'modern-dashboard' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
-	}
-
-	public function can_view(): bool|WP_Error {
-		if ( Capabilities::can_manage() || current_user_can( Capabilities::VIEW ) ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'modern_dashboard_forbidden',
-			__( 'You are not allowed to view this dashboard.', 'modern-dashboard' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
-	}
 
 	public function get_blocks(): WP_REST_Response {
 		return rest_ensure_response(

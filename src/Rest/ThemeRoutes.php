@@ -9,7 +9,6 @@ declare( strict_types = 1 );
 
 namespace ModernDashboard\Rest;
 
-use ModernDashboard\Support\Capabilities;
 use ModernDashboard\Theme\Theme;
 use ModernDashboard\Theme\ThemeRenderer;
 use ModernDashboard\Theme\ThemeRepository;
@@ -21,6 +20,8 @@ use WP_REST_Server;
 defined( 'ABSPATH' ) || exit;
 
 final class ThemeRoutes {
+
+	use Guard;
 
 	private ThemeRepository $themes;
 
@@ -75,17 +76,6 @@ final class ThemeRoutes {
 		);
 	}
 
-	public function can_manage(): bool|WP_Error {
-		if ( Capabilities::can_manage() ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'modern_dashboard_forbidden',
-			__( 'You need network administrator access to change branding.', 'modern-dashboard' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
-	}
 
 	public function get_theme(): WP_REST_Response {
 		return rest_ensure_response(

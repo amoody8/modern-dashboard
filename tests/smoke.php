@@ -148,6 +148,13 @@ check( 'excluded sites cleaned + deduped', $clean['excluded_sites'], [ 12, 34 ] 
 check( 'truthy string is true', $clean['collect_storage'], true );
 check( 'zero is false', $clean['allow_site_admins'], false );
 
+// The palette is a global admin change, so it must stay off unless asked for.
+check( 'palette_enabled defaults false', Settings::defaults()['palette_enabled'], false );
+check( 'palette_enabled absent from input stays false', $clean['palette_enabled'], false );
+check( 'palette_enabled coerces truthy', $settings->sanitize( [ 'palette_enabled' => '1' ] )['palette_enabled'], true );
+check( 'palette_enabled coerces falsy', $settings->sanitize( [ 'palette_enabled' => '' ] )['palette_enabled'], false );
+check( 'palette_enabled is in the rest schema', Settings::rest_schema()['palette_enabled'], [ 'type' => 'boolean' ] );
+
 // --- Store index and staleness --------------------------------------------
 
 echo "\nStore staleness index\n";
