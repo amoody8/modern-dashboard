@@ -17,10 +17,8 @@ git diff --exit-code -- build/
 
 All of this currently passes.
 
-**`composer lint` has never run here** — Composer is not installed, so phpcs has
-not seen the ~1,400 new lines of PHP. Either install it
-(`brew install composer`) or let CI be the first to check. It is the most likely
-source of a red build.
+`composer lint` needs Composer (`brew install composer`, then
+`composer install`). It is clean as of the palette work.
 
 ## 2. WordPress Playground (browser, no install)
 
