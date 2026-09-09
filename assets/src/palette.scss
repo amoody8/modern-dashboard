@@ -1,0 +1,191 @@
+// Command palette overlay.
+//
+// Scoped under .modern-dashboard like the rest of the plugin's CSS — the host
+// element carries that class, which is what makes the design tokens resolve
+// even though the portal renders outside the app tree.
+
+.modern-dashboard {
+	// The admin menu sits at 9990 and the admin bar at 99999. The palette
+	// covers both: Escape is always available, and a bar poking through a modal
+	// reads as a bug.
+	--md-z-scrim: 100000;
+	--md-z-palette: 100001;
+
+	--md-scrim: rgba(0, 0, 0, 0.45);
+	--md-elevated: #fff;
+	--md-elevated-border: #c3c4c7;
+	--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+	--md-selected-bg: #f0f6fc;
+	--md-selected-border: #2271b1;
+}
+
+.md-palette__overlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--md-z-scrim);
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 10vh 16px 16px;
+}
+
+.md-palette__scrim {
+	position: fixed;
+	inset: 0;
+	background: var(--md-scrim);
+}
+
+.md-palette {
+	position: relative;
+	z-index: var(--md-z-palette);
+	width: 100%;
+	max-width: 620px;
+	max-height: 70vh;
+	display: flex;
+	flex-direction: column;
+	background: var(--md-elevated);
+	border: 1px solid var(--md-elevated-border);
+	border-radius: var(--md-radius);
+	box-shadow: var(--md-shadow-lg);
+	overflow: hidden;
+	color: var(--md-text);
+}
+
+.md-palette__field {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 14px;
+	border-bottom: 1px solid var(--md-border);
+
+	.dashicons {
+		color: var(--md-muted);
+		flex: 0 0 auto;
+	}
+}
+
+.md-palette__input {
+	flex: 1 1 auto;
+	border: 0;
+	background: transparent;
+	font-size: 16px;
+	line-height: 1.4;
+	color: var(--md-text);
+	padding: 4px 0;
+
+	&:focus {
+		outline: none;
+		box-shadow: none;
+	}
+
+	&::placeholder {
+		color: var(--md-muted);
+	}
+}
+
+.md-palette__results {
+	overflow-y: auto;
+	padding: 6px 0;
+}
+
+.md-palette__group + .md-palette__group {
+	border-top: 1px solid var(--md-border);
+	margin-top: 4px;
+	padding-top: 4px;
+}
+
+.md-palette__group-label {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--md-muted);
+	padding: 6px 14px 4px;
+}
+
+.md-palette__result {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 14px;
+	cursor: pointer;
+	border-left: 3px solid transparent;
+
+	&.is-selected {
+		background: var(--md-selected-bg);
+		border-left-color: var(--md-selected-border);
+	}
+
+	.md-palette__icon {
+		color: var(--md-muted);
+		flex: 0 0 auto;
+	}
+}
+
+.md-palette__label {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.md-palette__title {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.md-palette__meta {
+	font-size: 12px;
+	color: var(--md-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.md-palette__badge {
+	font-size: 11px;
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: var(--md-warn-bg);
+	color: var(--md-warn);
+	flex: 0 0 auto;
+}
+
+.md-palette__footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 14px;
+	border-top: 1px solid var(--md-border);
+	font-size: 12px;
+	color: var(--md-muted);
+}
+
+// Same guard as the dashboard's dark block: the OS preference and an explicitly
+// dark admin colour scheme. No overlay tokens existed before, so they are
+// defined here rather than in dashboard.scss.
+@media (prefers-color-scheme: dark) {
+	body.admin-color-modern .modern-dashboard,
+	body.admin-color-midnight .modern-dashboard {
+		// Darker, not lighter: a pale scrim over a dark page reads as fog.
+		--md-scrim: rgba(0, 0, 0, 0.65);
+		// One step lighter than --md-surface. Elevation in a dark UI is
+		// lightness; the existing shadow is nearly invisible against it.
+		--md-elevated: #2c3338;
+		--md-elevated-border: #4f5a65;
+		--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+		--md-selected-bg: #33404d;
+		--md-selected-border: #3987e5;
+	}
+}
+
+@media (max-width: 600px) {
+	.md-palette__overlay {
+		padding: 4vh 8px 8px;
+	}
+
+	.md-palette {
+		max-height: 85vh;
+	}
+}
