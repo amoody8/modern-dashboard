@@ -137,9 +137,19 @@ On a four-site wp-env network, 2026-09-09:
 
 - Indexed URLs are real and site-correct
   (`/alpha/wp-admin/post.php?post=10&action=edit`) — the null-URL bug is fixed.
-- `betaadmin` searching `confidential` gets nothing while alpha's post exists;
-  finds their own site's content; cannot see alpha's draft; sees only Beta in
-  site results. The super admin gets the alpha post with a working link.
+- The boundary, proven both ways through the REST stack as each user:
+
+  | Term | `betaadmin` | `admin` |
+  |---|---|---|
+  | `confidential` | nothing | 2 alpha posts |
+  | `quarterly` | own post | — |
+  | `salary` (alpha draft) | nothing | — |
+  | `alpha` | nothing | site + content |
+  | `beta` | own site + content | — |
+
+  The positive rows matter as much as the negative ones: an empty result proves
+  nothing on its own, since a broken search looks identical to a working
+  boundary. `quarterly` and `beta` are what show search is alive for that user.
 - A second cron pass over unchanged sites writes nothing.
 - The palette opens in the browser and returns results — this needed the
   apiFetch middleware fix, which no server-side test could catch, because
