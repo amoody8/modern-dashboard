@@ -247,6 +247,17 @@ export default function SettingsPanel( { onSaved } ) {
 
 				<Checkbox
 					label={ __(
+						'Restyle the WordPress admin — applies the dashboard\u2019s look to the sidebar, toolbar, list tables and forms on every screen',
+						'modern-dashboard'
+					) }
+					checked={ settings.skin_enabled }
+					onChange={ ( event ) =>
+						set( 'skin_enabled', event.target.checked )
+					}
+				/>
+
+				<Checkbox
+					label={ __(
 						'Enable the command palette — Cmd/Ctrl+K on every admin screen, searching sites, content and admin screens. Network-wide content search stays limited to network administrators.',
 						'modern-dashboard'
 					) }

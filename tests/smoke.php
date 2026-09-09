@@ -180,6 +180,8 @@ check( 'palette_enabled defaults false', Settings::defaults()['palette_enabled']
 check( 'palette_enabled absent from input stays false', $clean['palette_enabled'], false );
 check( 'palette_enabled coerces truthy', $settings->sanitize( [ 'palette_enabled' => '1' ] )['palette_enabled'], true );
 check( 'palette_enabled coerces falsy', $settings->sanitize( [ 'palette_enabled' => '' ] )['palette_enabled'], false );
+check( 'skin_enabled defaults true', Settings::defaults()['skin_enabled'], true );
+check( 'skin_enabled can be turned off', $settings->sanitize( [ 'skin_enabled' => '' ] )['skin_enabled'], false );
 check( 'palette_enabled is in the rest schema', Settings::rest_schema()['palette_enabled'], [ 'type' => 'boolean' ] );
 
 // --- Store index and staleness --------------------------------------------

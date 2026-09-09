@@ -35,6 +35,7 @@ use ModernDashboard\Rest\PaletteRoutes;
 use ModernDashboard\Rest\ThemeRoutes;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
+use ModernDashboard\Theme\AdminSkin;
 use ModernDashboard\Theme\ThemeRenderer;
 use ModernDashboard\Theme\ThemeRepository;
 use ModernDashboard\Support\Capabilities;
@@ -155,6 +156,7 @@ final class Plugin {
 		( new MenuApplier( $this->menu_rules() ) )->register();
 		( new ThemeRoutes( $this->themes() ) )->register();
 		( new ThemeRenderer( $this->themes() ) )->register();
+		( new AdminSkin( $this, $this->settings() ) )->register();
 		( new NetworkAdminPage() )->register();
 
 		$palette_gate = $this->palette_gate();

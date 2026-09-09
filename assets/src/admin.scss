@@ -1,0 +1,557 @@
+// The admin skin.
+//
+// Everything else in this plugin is scoped under `.modern-dashboard` and only
+// affects our own screens. This file is the opposite: it restyles WordPress
+// itself — the sidebar, the toolbar, list tables, forms, buttons — on every
+// admin page of every site.
+//
+// Two rules govern everything here.
+//
+// **Restyle, never restructure.** We change how core's markup looks, not what
+// it is. No DOM is moved, no element is hidden that carries meaning, and every
+// selector targets something core has shipped for years. A WordPress upgrade
+// that changes markup should degrade to "looks stock", never to "broken".
+//
+// **Always recoverable.** `?mdash-skin=off` on any admin URL renders the
+// untouched admin for anyone who can `manage_options`, exactly as the branding
+// and menu subsystems already do. A colour scheme nobody can read must never be
+// a lockout.
+//
+// Tokens come from _tokens.scss but are re-declared on `:root` here, because
+// the elements being styled live outside `.modern-dashboard`.
+
+@use 'styles/tokens';
+
+:root {
+	--mds-bg: #f4f5f8;
+	--mds-surface: #ffffff;
+	--mds-sunken: #f8f9fb;
+	--mds-hover: #f2f4f8;
+	--mds-border: #e6e8ee;
+	--mds-border-strong: #d3d7e0;
+	--mds-text: #14161c;
+	--mds-text-soft: #4a4f5c;
+	--mds-muted: #6b7280;
+	--mds-accent: #4b48d6;
+	--mds-accent-hover: #3f3cc4;
+	--mds-accent-soft: #eeedfc;
+	--mds-good: #0d8a5f;
+	--mds-warn: #b26a00;
+	--mds-bad: #c0392f;
+
+	--mds-radius-sm: 7px;
+	--mds-radius: 10px;
+	--mds-radius-lg: 14px;
+
+	--mds-shadow: 0 1px 2px rgba(16, 18, 26, 0.04), 0 4px 12px rgba(16, 18, 26, 0.03);
+
+	--mds-sidebar: 172px;
+	--mds-gap: 20px;
+}
+
+// The dark palette. Gated on the admin colour scheme rather than the OS alone:
+// a dark plugin inside a light admin looks broken, not themed.
+body.admin-color-modern,
+body.admin-color-midnight {
+	@media (prefers-color-scheme: dark) {
+		--mds-bg: #12141a;
+		--mds-surface: #1a1d25;
+		--mds-sunken: #16181f;
+		--mds-hover: #21252f;
+		--mds-border: #272b35;
+		--mds-border-strong: #383e4b;
+		--mds-text: #e9eaf0;
+		--mds-text-soft: #b9bec9;
+		--mds-muted: #949aa8;
+		--mds-accent: #8b88f0;
+		--mds-accent-hover: #a2a0f5;
+		--mds-accent-soft: #232149;
+		--mds-good: #4ec99a;
+		--mds-warn: #e6ab55;
+		--mds-bad: #f0857a;
+		--mds-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+	}
+}
+
+body.wp-admin.mds-skin {
+	background: var(--mds-bg);
+	color: var(--mds-text);
+
+	// ------------------------------------------------------------- toolbar
+
+	#wpadminbar {
+		background: var(--mds-surface);
+		border-bottom: 1px solid var(--mds-border);
+		box-shadow: none;
+		height: 40px;
+
+		.ab-item,
+		a.ab-item,
+		> #wp-toolbar span.ab-label,
+		> #wp-toolbar span.noticon {
+			color: var(--mds-text-soft);
+		}
+
+		.ab-top-menu > li > .ab-item {
+			height: 40px;
+			line-height: 40px;
+		}
+
+		.ab-top-menu > li:hover > .ab-item,
+		.ab-top-menu > li.hover > .ab-item,
+		.ab-top-menu > li > .ab-item:focus {
+			background: var(--mds-hover);
+			color: var(--mds-text);
+		}
+
+		.ab-sub-wrapper,
+		.ab-submenu {
+			background: var(--mds-surface);
+			border: 1px solid var(--mds-border);
+			border-radius: var(--mds-radius-sm);
+			box-shadow: var(--mds-shadow);
+			overflow: hidden;
+		}
+
+		.ab-submenu .ab-item {
+			color: var(--mds-text-soft);
+		}
+
+		.ab-icon::before,
+		.ab-item::before {
+			color: var(--mds-muted);
+		}
+	}
+
+	#wpadminbar .quicklinks li .blavatar::before {
+		color: var(--mds-muted);
+	}
+
+	// -------------------------------------------------------------- sidebar
+	//
+	// The sidebar is the single element most responsible for "this is
+	// wp-admin". Making it a light surface with an indigo active state is the
+	// biggest perceived change per line of CSS in this file.
+
+	#adminmenuback,
+	#adminmenuwrap,
+	#adminmenu {
+		background: transparent;
+		box-shadow: none;
+	}
+
+	#adminmenuwrap {
+		background: var(--mds-surface);
+		border: 1px solid var(--mds-border);
+		border-radius: var(--mds-radius-lg);
+		box-shadow: var(--mds-shadow);
+		overflow: hidden;
+		margin: var(--mds-gap) 0 var(--mds-gap) var(--mds-gap);
+		width: var(--mds-sidebar);
+	}
+
+	#adminmenu {
+		margin: 8px 0;
+
+		a {
+			color: var(--mds-text-soft);
+		}
+
+		li.menu-top {
+			margin: 1px 8px;
+			border-radius: var(--mds-radius-sm);
+			overflow: hidden;
+		}
+
+		.wp-menu-image::before {
+			color: var(--mds-muted);
+			opacity: 1;
+		}
+
+		li.menu-top:hover,
+		li.opensub > a.menu-top,
+		li > a.menu-top:focus {
+			background: var(--mds-hover);
+			color: var(--mds-text);
+
+			.wp-menu-image::before {
+				color: var(--mds-accent);
+			}
+		}
+
+		li.wp-has-current-submenu a.wp-has-current-submenu,
+		li.current a.menu-top,
+		.wp-menu-arrow,
+		.wp-has-current-submenu .wp-submenu .wp-submenu-head {
+			background: var(--mds-accent-soft);
+			color: var(--mds-accent);
+			text-shadow: none;
+			box-shadow: none;
+			font-weight: 600;
+
+			.wp-menu-image::before {
+				color: var(--mds-accent);
+			}
+		}
+
+		// Core draws a triangle joining the menu to its flyout. It points at a
+		// background we no longer use, so it reads as a stray artefact.
+		.wp-menu-arrow,
+		li.wp-has-current-submenu .wp-menu-arrow {
+			display: none;
+		}
+
+		.wp-submenu {
+			background: var(--mds-sunken);
+			border-radius: var(--mds-radius-sm);
+			box-shadow: none;
+
+			a {
+				color: var(--mds-muted);
+
+				&:hover,
+				&:focus {
+					color: var(--mds-accent);
+				}
+			}
+
+			li.current a,
+			a.current {
+				color: var(--mds-accent);
+				font-weight: 600;
+			}
+		}
+
+		li.wp-not-current-submenu .wp-submenu {
+			border: 1px solid var(--mds-border);
+			box-shadow: var(--mds-shadow);
+			background: var(--mds-surface);
+		}
+
+		div.separator {
+			border-color: var(--mds-border);
+		}
+	}
+
+	#collapse-button {
+		color: var(--mds-muted);
+	}
+
+	// -------------------------------------------------------------- content
+
+	#wpcontent {
+		padding-left: var(--mds-gap);
+	}
+
+	#wpbody-content {
+		padding-bottom: 40px;
+	}
+
+	.wrap {
+		margin: var(--mds-gap) var(--mds-gap) 0 0;
+
+		h1,
+		h1.wp-heading-inline {
+			font-size: 20px;
+			font-weight: 650;
+			letter-spacing: -0.015em;
+			color: var(--mds-text);
+		}
+	}
+
+	// Core's "Add New" next to a page title is a link styled as a button.
+	.wrap .page-title-action {
+		background: var(--mds-accent);
+		border-color: var(--mds-accent);
+		color: #fff;
+		border-radius: var(--mds-radius-sm);
+		padding: 6px 12px;
+		font-weight: 600;
+		box-shadow: none;
+
+		&:hover,
+		&:focus {
+			background: var(--mds-accent-hover);
+			border-color: var(--mds-accent-hover);
+			color: #fff;
+		}
+	}
+
+	// ----------------------------------------------------------- list tables
+
+	.wp-list-table {
+		background: var(--mds-surface);
+		border: 1px solid var(--mds-border);
+		border-radius: var(--mds-radius-lg);
+		box-shadow: var(--mds-shadow);
+		border-collapse: separate;
+		border-spacing: 0;
+		overflow: hidden;
+
+		thead th,
+		thead td,
+		tfoot th,
+		tfoot td {
+			background: var(--mds-sunken);
+			border-bottom: 1px solid var(--mds-border);
+			color: var(--mds-muted);
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			padding: 10px;
+		}
+
+		tfoot th,
+		tfoot td {
+			border-top: 1px solid var(--mds-border);
+			border-bottom: 0;
+		}
+
+		thead th a,
+		tfoot th a {
+			color: inherit;
+		}
+
+		tbody td,
+		tbody th {
+			border-bottom: 1px solid var(--mds-border);
+			color: var(--mds-text-soft);
+			padding: 11px 10px;
+		}
+
+		tbody tr:last-child td,
+		tbody tr:last-child th {
+			border-bottom: 0;
+		}
+
+		// Core stripes alternate rows. A hover state reads better and does not
+		// fight the surface.
+		&.striped > tbody > :nth-child(odd) {
+			background: transparent;
+		}
+
+		tbody tr:hover {
+			background: var(--mds-hover);
+		}
+
+		.row-title {
+			color: var(--mds-text);
+			font-weight: 600;
+		}
+
+		.row-actions {
+			color: var(--mds-muted);
+		}
+	}
+
+	.tablenav {
+		.tablenav-pages .current-page,
+		.tablenav-pages a.page-numbers,
+		.tablenav-pages span.tablenav-pages-navspan {
+			border-radius: var(--mds-radius-sm);
+			border-color: var(--mds-border-strong);
+		}
+
+		.displaying-num {
+			color: var(--mds-muted);
+		}
+	}
+
+	.subsubsub {
+		color: var(--mds-muted);
+
+		a.current {
+			color: var(--mds-accent);
+			font-weight: 600;
+		}
+	}
+
+	// ------------------------------------------------------------ postboxes
+	//
+	// Dashboard widgets and metaboxes: the same card treatment as our own
+	// panels, so a stock screen and one of ours read as the same product.
+
+	.postbox,
+	#dashboard-widgets .postbox {
+		background: var(--mds-surface);
+		border: 1px solid var(--mds-border);
+		border-radius: var(--mds-radius-lg);
+		box-shadow: var(--mds-shadow);
+
+		.postbox-header {
+			border-bottom: 1px solid var(--mds-border);
+		}
+
+		h2,
+		h3 {
+			color: var(--mds-text);
+			font-size: 14px;
+			font-weight: 600;
+		}
+	}
+
+	.postbox-container .meta-box-sortables .postbox .hndle {
+		border-bottom-color: var(--mds-border);
+	}
+
+	// ---------------------------------------------------------------- forms
+
+	.form-table {
+		th {
+			color: var(--mds-text-soft);
+			font-weight: 600;
+			padding: 16px 10px 16px 0;
+		}
+
+		td {
+			padding: 12px 10px;
+		}
+	}
+
+	input[type='text'],
+	input[type='search'],
+	input[type='url'],
+	input[type='email'],
+	input[type='number'],
+	input[type='password'],
+	input[type='tel'],
+	input[type='date'],
+	select,
+	textarea {
+		background: var(--mds-surface);
+		border: 1px solid var(--mds-border-strong);
+		border-radius: var(--mds-radius-sm);
+		color: var(--mds-text);
+		box-shadow: none;
+
+		&:focus {
+			border-color: var(--mds-accent);
+			outline: 2px solid var(--mds-accent);
+			outline-offset: -1px;
+			box-shadow: none;
+		}
+	}
+
+	input[type='checkbox'],
+	input[type='radio'] {
+		border-color: var(--mds-border-strong);
+
+		&:checked::before {
+			color: var(--mds-accent);
+		}
+	}
+
+	input[type='checkbox']:focus,
+	input[type='radio']:focus {
+		border-color: var(--mds-accent);
+		box-shadow: 0 0 0 1px var(--mds-accent);
+	}
+
+	// -------------------------------------------------------------- buttons
+
+	.wp-core-ui .button-primary {
+		background: var(--mds-accent);
+		border-color: var(--mds-accent);
+		color: #fff;
+		border-radius: var(--mds-radius-sm);
+		font-weight: 600;
+		text-shadow: none;
+		box-shadow: none;
+
+		&:hover,
+		&:focus {
+			background: var(--mds-accent-hover);
+			border-color: var(--mds-accent-hover);
+			color: #fff;
+		}
+
+		&:focus {
+			box-shadow: 0 0 0 2px var(--mds-accent-soft);
+		}
+	}
+
+	.wp-core-ui .button,
+	.wp-core-ui .button-secondary {
+		background: var(--mds-surface);
+		border-color: var(--mds-border-strong);
+		color: var(--mds-text-soft);
+		border-radius: var(--mds-radius-sm);
+		box-shadow: none;
+
+		&:hover,
+		&:focus {
+			background: var(--mds-hover);
+			border-color: var(--mds-border-strong);
+			color: var(--mds-text);
+		}
+	}
+
+	// -------------------------------------------------------------- notices
+
+	.notice,
+	div.updated,
+	div.error {
+		background: var(--mds-surface);
+		border: 1px solid var(--mds-border);
+		border-left-width: 4px;
+		border-radius: var(--mds-radius);
+		box-shadow: var(--mds-shadow);
+		padding: 10px 14px;
+	}
+
+	.notice-success,
+	div.updated { border-left-color: var(--mds-good); }
+	.notice-warning { border-left-color: var(--mds-warn); }
+	.notice-error,
+	div.error { border-left-color: var(--mds-bad); }
+	.notice-info { border-left-color: var(--mds-accent); }
+
+	// ------------------------------------------------------------ screen meta
+
+	#screen-meta,
+	#screen-meta-links .show-settings {
+		background: var(--mds-surface);
+		border-color: var(--mds-border);
+	}
+
+	#screen-meta-links .show-settings {
+		border-radius: var(--mds-radius-sm);
+		color: var(--mds-text-soft);
+	}
+
+	// --------------------------------------------------------------- footer
+
+	#wpfooter {
+		color: var(--mds-muted);
+		border-top: 1px solid var(--mds-border);
+		padding: 12px var(--mds-gap);
+
+		a { color: var(--mds-muted); }
+	}
+
+	// ------------------------------------------------------------ responsive
+	//
+	// Below 960px core collapses the sidebar to icons and shifts layout. The
+	// floating sidebar treatment fights that, so it reverts to core's.
+
+	@media screen and (max-width: 960px) {
+		#adminmenuwrap {
+			margin: 0;
+			border: 0;
+			border-radius: 0;
+			width: auto;
+		}
+	}
+}
+
+// The block editor renders its own React chrome and repaints it constantly.
+// Restyling inside it is a losing game against every editor release, so the
+// skin stops at the editor's edge and leaves the canvas alone.
+body.block-editor-page.mds-skin {
+	#adminmenuwrap {
+		margin: 0;
+		border: 0;
+		border-radius: 0;
+	}
+}
