@@ -85,7 +85,7 @@ final class LogRepository {
 		$params = array();
 
 		if ( ! empty( $args['action'] ) ) {
-			$where[]  = 'action = %s';
+			$where[] = 'action = %s';
 			// Dots are meaningful in an action name, so this cannot use
 			// sanitize_key(); the value is bound, not interpolated.
 			$params[] = preg_replace( '/[^a-z0-9._-]/', '', strtolower( (string) $args['action'] ) );
