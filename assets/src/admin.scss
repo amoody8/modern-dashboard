@@ -23,20 +23,25 @@
 @use 'styles/tokens';
 
 :root {
-	// Sampled from the reference. The page ground is pure white and the rail
-	// is the tinted surface — the opposite of the usual dashboard convention,
-	// and the thing that makes this look calm rather than boxed.
+	// Tailwind's neutral ramp. The reference is built on Tailwind (their docs
+	// say so) and the values I sampled land on it almost exactly — the rail is
+	// neutral-50, card borders are neutral-100. Matching the ramp rather than
+	// my samples means the greys relate to each other the way theirs do.
+	//
+	// Note the page ground is pure white and the rail is the tinted surface,
+	// which is the opposite of the usual dashboard convention and most of why
+	// this reads calm rather than boxed.
 	--mds-bg: #ffffff;
 	--mds-surface: #ffffff;
-	--mds-rail-bg: #fafafa;
-	--mds-sunken: #fafafa;
-	--mds-hover: #f2f2f3;
-	--mds-border: #ececed;
-	--mds-border-soft: #f4f4f5;
-	--mds-border-strong: #dededf;
-	--mds-text: #1c1c1e;
-	--mds-text-soft: #4a4a4d;
-	--mds-muted: #7f7f81;
+	--mds-rail-bg: #fafafa;      // neutral-50
+	--mds-sunken: #fafafa;       // neutral-50
+	--mds-hover: #f5f5f5;        // neutral-100
+	--mds-border: #e5e5e5;       // neutral-200
+	--mds-border-soft: #f5f5f5;  // neutral-100
+	--mds-border-strong: #d4d4d4; // neutral-300
+	--mds-text: #171717;         // neutral-900
+	--mds-text-soft: #404040;    // neutral-700
+	--mds-muted: #737373;        // neutral-500
 
 	// One accent, used only where something is genuinely selected or primary.
 	// Everything else is greyscale, so the accent means something when it
@@ -101,17 +106,17 @@ body.mds-dark {
 
 // Chosen explicitly, so it does not wait on the OS.
 body.mds-dark {
-	--mds-bg: #131315;
-	--mds-surface: #18181b;
-	--mds-rail-bg: #131315;
-	--mds-sunken: #202023;
-	--mds-hover: #232326;
-	--mds-border: #2a2a2e;
-	--mds-border-soft: #232326;
-	--mds-border-strong: #3a3a3f;
-	--mds-text: #f2f2f3;
-	--mds-text-soft: #c4c4c7;
-	--mds-muted: #8a8a8e;
+	--mds-bg: #0a0a0a;           // neutral-950
+	--mds-surface: #171717;      // neutral-900
+	--mds-rail-bg: #0a0a0a;      // neutral-950
+	--mds-sunken: #171717;       // neutral-900
+	--mds-hover: #262626;        // neutral-800
+	--mds-border: #262626;       // neutral-800
+	--mds-border-soft: #1f1f1f;
+	--mds-border-strong: #404040; // neutral-700
+	--mds-text: #fafafa;         // neutral-50
+	--mds-text-soft: #d4d4d4;    // neutral-300
+	--mds-muted: #a3a3a3;        // neutral-400
 	--mds-accent: #9d9bf5;
 	--mds-accent-hover: #b4b2f8;
 	--mds-accent-soft: #232149;
