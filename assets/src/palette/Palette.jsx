@@ -231,7 +231,10 @@ export default function Palette() {
 	const showEmpty = 'loading' !== status && 0 === results.length;
 
 	return createPortal(
-		<div className="md-palette__overlay">
+		// The token class travels with the overlay because this renders into
+		// document.body, outside the host element that carries it. Without it
+		// every var() here resolves to nothing and the panel is transparent.
+		<div className="modern-dashboard-palette md-palette__overlay">
 			{ /* eslint-disable-next-line jsx-a11y/no-static-element-interactions */ }
 			<div
 				className="md-palette__scrim"

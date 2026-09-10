@@ -1,66 +1,153 @@
-// Command palette overlay.
+// Command palette.
 //
-// Scoped under .modern-dashboard like the rest of the plugin's CSS — the host
-// element carries that class, which is what makes the design tokens resolve
-// even though the portal renders outside the app tree.
+// This bundle loads on admin screens where nothing else of ours does, so it
+// cannot borrow tokens from the dashboard stylesheet — it has to declare
+// everything it uses. An earlier version declared only the overlay tokens and
+// inherited the rest, so six of the eleven values it referenced resolved to
+// nothing: the panel rendered with no background at all on any screen outside
+// the plugin's own pages.
+//
+// The values match styles/_tokens.scss and admin.scss and are duplicated
+// deliberately — the alternative is pulling the whole token layer into a
+// bundle that ships on every admin page, for eleven values. They are prefixed
+// `mdp-` so the duplication is visible rather than passing for the shared set.
 
-.modern-dashboard {
-	// The admin menu sits at 9990 and the admin bar at 99999. The palette
-	// covers both: Escape is always available, and a bar poking through a modal
-	// reads as a bug.
-	--md-z-scrim: 100000;
-	--md-z-palette: 100001;
+.modern-dashboard-palette {
+	--mdp-bg: #ffffff;
+	--mdp-sunken: #fafafa;
+	--mdp-hover: #f4f4f5;
+	--mdp-border: #e4e4e7;
+	--mdp-border-soft: #f4f4f5;
+	--mdp-text: #18181b;
+	--mdp-text-soft: #3f3f46;
+	--mdp-muted: #71717b;
 
-	--md-scrim: rgba(0, 0, 0, 0.45);
-	--md-elevated: #fff;
-	--md-elevated-border: #c3c4c7;
-	--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
-	--md-selected-bg: #f0f6fc;
-	--md-selected-border: #2271b1;
+	--mdp-accent: #4f39f6;
+	--mdp-warn: #a86b12;
+	--mdp-warn-bg: #fdf1dd;
+
+	--mdp-radius: 10px;
+	--mdp-radius-sm: 6px;
+
+	--mdp-scrim: rgba(9, 9, 11, 0.45);
+	--mdp-shadow: 0 16px 48px rgba(9, 9, 11, 0.16), 0 2px 8px rgba(9, 9, 11, 0.08);
+
+	// Above the admin bar (99999), so the overlay is never half-covered.
+	--mdp-z: 100000;
+}
+
+// Dark, on the same gate as the rest of the plugin: a class the server stamps,
+// never a preference inferred from the OS alone.
+body.mds-theme-dark .modern-dashboard-palette {
+	--mdp-bg: #1d1d1f;
+	--mdp-sunken: #141416;
+	--mdp-hover: #27272a;
+	--mdp-border: #27272a;
+	--mdp-border-soft: #212124;
+	--mdp-text: #fafafa;
+	--mdp-text-soft: #d4d4d8;
+	--mdp-muted: #9f9fa9;
+	--mdp-accent: #7c86ff;
+	--mdp-warn: #d9a25c;
+	--mdp-warn-bg: #33260f;
+	--mdp-scrim: rgba(0, 0, 0, 0.62);
+	--mdp-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+	body.mds-theme-system .modern-dashboard-palette {
+		--mdp-bg: #1d1d1f;
+		--mdp-sunken: #141416;
+		--mdp-hover: #27272a;
+		--mdp-border: #27272a;
+		--mdp-border-soft: #212124;
+		--mdp-text: #fafafa;
+		--mdp-text-soft: #d4d4d8;
+		--mdp-muted: #9f9fa9;
+		--mdp-accent: #7c86ff;
+		--mdp-warn: #d9a25c;
+		--mdp-warn-bg: #33260f;
+		--mdp-scrim: rgba(0, 0, 0, 0.62);
+		--mdp-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+	}
 }
 
 .md-palette__overlay {
 	position: fixed;
 	inset: 0;
-	z-index: var(--md-z-scrim);
+	z-index: var(--mdp-z);
 	display: flex;
 	align-items: flex-start;
 	justify-content: center;
-	padding: 10vh 16px 16px;
+	padding: 12vh 16px 16px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--mdp-text);
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
 }
 
 .md-palette__scrim {
 	position: fixed;
 	inset: 0;
-	background: var(--md-scrim);
+	background: var(--mdp-scrim);
+	animation: md-palette-fade 120ms ease-out;
 }
 
 .md-palette {
 	position: relative;
-	z-index: var(--md-z-palette);
+	z-index: 1;
 	width: 100%;
 	max-width: 620px;
-	max-height: 70vh;
+	max-height: 68vh;
 	display: flex;
 	flex-direction: column;
-	background: var(--md-elevated);
-	border: 1px solid var(--md-elevated-border);
-	border-radius: var(--md-radius);
-	box-shadow: var(--md-shadow-lg);
+	background: var(--mdp-bg);
+	border: 1px solid var(--mdp-border);
+	border-radius: var(--mdp-radius);
+	box-shadow: var(--mdp-shadow);
 	overflow: hidden;
-	color: var(--md-text);
+	// A short rise reads as the panel arriving, rather than blinking into
+	// existence over whatever was underneath.
+	animation: md-palette-rise 140ms cubic-bezier(0.2, 0, 0.13, 1);
 }
+
+@keyframes md-palette-fade {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes md-palette-rise {
+	from { opacity: 0; transform: translateY(-6px) scale(0.99); }
+	to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.md-palette__scrim,
+	.md-palette {
+		animation: none;
+	}
+}
+
+// ------------------------------------------------------------------- input
 
 .md-palette__field {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 12px 14px;
-	border-bottom: 1px solid var(--md-border);
+	gap: 10px;
+	padding: 13px 16px;
+	border-bottom: 1px solid var(--mdp-border-soft);
 
 	.dashicons {
-		color: var(--md-muted);
+		color: var(--mdp-muted);
 		flex: 0 0 auto;
+		font-size: 18px;
+		width: 18px;
+		height: 18px;
 	}
 }
 
@@ -68,57 +155,76 @@
 	flex: 1 1 auto;
 	border: 0;
 	background: transparent;
-	font-size: 16px;
+	font-family: inherit;
+	font-size: 15px;
 	line-height: 1.4;
-	color: var(--md-text);
-	padding: 4px 0;
+	color: var(--mdp-text);
+	padding: 2px 0;
+	min-height: 0;
+	box-shadow: none;
 
 	&:focus {
 		outline: none;
 		box-shadow: none;
+		border: 0;
 	}
 
 	&::placeholder {
-		color: var(--md-muted);
+		color: var(--mdp-muted);
+	}
+
+	&::-webkit-search-cancel-button {
+		display: none;
 	}
 }
 
+// ----------------------------------------------------------------- results
+
 .md-palette__results {
 	overflow-y: auto;
-	padding: 6px 0;
+	overscroll-behavior: contain;
+	padding: 6px;
 }
 
 .md-palette__group + .md-palette__group {
-	border-top: 1px solid var(--md-border);
-	margin-top: 4px;
-	padding-top: 4px;
+	margin-top: 2px;
+	padding-top: 6px;
+	border-top: 1px solid var(--mdp-border-soft);
 }
 
 .md-palette__group-label {
 	font-size: 11px;
 	font-weight: 600;
-	text-transform: uppercase;
 	letter-spacing: 0.04em;
-	color: var(--md-muted);
-	padding: 6px 14px 4px;
+	text-transform: uppercase;
+	color: var(--mdp-muted);
+	padding: 6px 10px 4px;
 }
 
 .md-palette__result {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	padding: 8px 14px;
+	padding: 8px 10px;
+	border-radius: var(--mdp-radius-sm);
 	cursor: pointer;
-	border-left: 3px solid transparent;
+	color: var(--mdp-text-soft);
 
 	&.is-selected {
-		background: var(--md-selected-bg);
-		border-left-color: var(--md-selected-border);
+		background: var(--mdp-hover);
+		color: var(--mdp-text);
+
+		.md-palette__icon {
+			color: var(--mdp-accent);
+		}
 	}
 
 	.md-palette__icon {
-		color: var(--md-muted);
+		color: var(--mdp-muted);
 		flex: 0 0 auto;
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
 	}
 }
 
@@ -127,6 +233,7 @@
 	flex-direction: column;
 	min-width: 0;
 	flex: 1 1 auto;
+	line-height: 1.35;
 }
 
 .md-palette__title {
@@ -136,56 +243,89 @@
 }
 
 .md-palette__meta {
-	font-size: 12px;
-	color: var(--md-muted);
+	font-size: 11.5px;
+	color: var(--mdp-muted);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
 .md-palette__badge {
-	font-size: 11px;
-	padding: 1px 6px;
+	font-size: 10.5px;
+	font-weight: 600;
+	padding: 2px 7px;
 	border-radius: 999px;
-	background: var(--md-warn-bg);
-	color: var(--md-warn);
+	background: var(--mdp-warn-bg);
+	color: var(--mdp-warn);
 	flex: 0 0 auto;
 }
 
+// ------------------------------------------------------------------ states
+//
+// The shared primitives render here, but their styles live in the dashboard
+// bundle, which is not loaded on most admin screens. These rules are what keep
+// a spinner or an empty state from arriving unstyled.
+
+.md-palette .md-loading,
+.md-palette .md-empty {
+	padding: 28px 16px;
+	text-align: center;
+	color: var(--mdp-muted);
+	font-size: 13px;
+	margin: 0;
+	display: block;
+}
+
+.md-palette .md-empty strong {
+	display: block;
+	color: var(--mdp-text);
+	font-size: 13.5px;
+	margin-bottom: 3px;
+}
+
+.md-palette .md-loading__dot {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--mdp-accent);
+	animation: md-palette-pulse 1s ease-in-out infinite;
+}
+
+@keyframes md-palette-pulse {
+	0%, 100% { opacity: 0.35; }
+	50% { opacity: 1; }
+}
+
+.md-palette .md-notice {
+	margin: 8px;
+	padding: 9px 12px;
+	border-radius: var(--mdp-radius-sm);
+	background: var(--mdp-warn-bg);
+	color: var(--mdp-warn);
+	font-size: 12.5px;
+}
+
+// ------------------------------------------------------------------ footer
+
 .md-palette__footer {
 	display: flex;
+	align-items: center;
 	justify-content: space-between;
 	gap: 12px;
 	padding: 8px 14px;
-	border-top: 1px solid var(--md-border);
-	font-size: 12px;
-	color: var(--md-muted);
-}
-
-// Overlay tokens for dark mode. Same gate as everywhere else: a WordPress
-// scheme that means "dark", or the explicit opt-in — never the default scheme
-// plus a dark OS, which is a preference nobody expressed.
-@media (prefers-color-scheme: dark) {
-	body.mds-theme-dark .modern-dashboard,
-	body.mds-theme-system .modern-dashboard {
-		// Darker, not lighter: a pale scrim over a dark page reads as fog.
-		--md-scrim: rgba(0, 0, 0, 0.65);
-		// One step lighter than --md-surface. Elevation in a dark UI is
-		// lightness; the existing shadow is nearly invisible against it.
-		--md-elevated: #2c3338;
-		--md-elevated-border: #4f5a65;
-		--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
-		--md-selected-bg: #33404d;
-		--md-selected-border: #3987e5;
-	}
+	border-top: 1px solid var(--mdp-border-soft);
+	background: var(--mdp-sunken);
+	font-size: 11.5px;
+	color: var(--mdp-muted);
 }
 
 @media (max-width: 600px) {
 	.md-palette__overlay {
-		padding: 4vh 8px 8px;
+		padding: 6vh 10px 10px;
 	}
 
 	.md-palette {
-		max-height: 85vh;
+		max-height: 82vh;
 	}
 }
