@@ -23,41 +23,44 @@
 @use 'styles/tokens';
 
 :root {
-	// Tailwind's neutral ramp. The reference is built on Tailwind (their docs
-	// say so) and the values I sampled land on it almost exactly — the rail is
-	// neutral-50, card borders are neutral-100. Matching the ramp rather than
-	// my samples means the greys relate to each other the way theirs do.
+	// Tailwind v4 **zinc**, taken from uipress.co's own stylesheet rather than
+	// guessed. Zinc, not neutral: it carries a slight cool cast (.006 chroma
+	// around hue 286 in OKLCH), which is why greys sampled from the reference
+	// read cooler than a flat neutral ramp would explain.
 	//
-	// Note the page ground is pure white and the rail is the tinted surface,
-	// which is the opposite of the usual dashboard convention and most of why
-	// this reads calm rather than boxed.
+	// Written as hex because their source is oklch(), and hex renders
+	// identically everywhere without depending on colour-space support.
+	//
+	// The page ground is white and the rail is the tinted surface — the
+	// opposite of the usual dashboard convention, and most of why this reads
+	// calm rather than boxed.
 	--mds-bg: #ffffff;
 	--mds-surface: #ffffff;
-	--mds-rail-bg: #fafafa;      // neutral-50
-	--mds-sunken: #fafafa;       // neutral-50
-	--mds-hover: #f5f5f5;        // neutral-100
-	--mds-border: #e5e5e5;       // neutral-200
-	--mds-border-soft: #f5f5f5;  // neutral-100
-	--mds-border-strong: #d4d4d4; // neutral-300
-	--mds-text: #171717;         // neutral-900
-	--mds-text-soft: #404040;    // neutral-700
-	--mds-muted: #737373;        // neutral-500
+	--mds-rail-bg: #fafafa;       // zinc-50
+	--mds-sunken: #fafafa;        // zinc-50
+	--mds-hover: #f4f4f5;         // zinc-100
+	--mds-border: #e4e4e7;        // zinc-200
+	--mds-border-soft: #f4f4f5;   // zinc-100
+	--mds-border-strong: #d4d4d8; // zinc-300
+	--mds-text: #18181b;          // zinc-900
+	--mds-text-soft: #3f3f46;     // zinc-700
+	--mds-muted: #71717b;         // zinc-500
 
 	// One accent, used only where something is genuinely selected or primary.
 	// Everything else is greyscale, so the accent means something when it
 	// appears rather than being decoration.
-	--mds-accent: #3a3ad4;
-	--mds-accent-hover: #3131b8;
-	--mds-accent-soft: #f0f0fd;
+	--mds-accent: #4f39f6;        // indigo-600, theirs
+	--mds-accent-hover: #4429e0;
+	--mds-accent-soft: #eef2ff;   // indigo-50
 
 	// Semantic, and separate from the accent.
-	--mds-good: #12855c;
-	--mds-warn: #a86b12;
-	--mds-bad: #c8372d;
+	--mds-good: #00a63e;          // green-600, theirs
+	--mds-warn: #d08700;          // amber-600
+	--mds-bad: #e7000b;           // red-600
 
-	--mds-radius-sm: 6px;
-	--mds-radius: 8px;
-	--mds-radius-lg: 10px;
+	--mds-radius-sm: 6px;         // radius-md, .375rem
+	--mds-radius: 8px;            // radius-lg, .5rem
+	--mds-radius-lg: 12px;        // radius-xl, .75rem
 
 	// Cards in the reference carry no shadow at all: separation comes from a
 	// hairline border on white. A shadow here would read as heavier and older.
@@ -106,19 +109,19 @@ body.mds-dark {
 
 // Chosen explicitly, so it does not wait on the OS.
 body.mds-dark {
-	--mds-bg: #0a0a0a;           // neutral-950
-	--mds-surface: #171717;      // neutral-900
-	--mds-rail-bg: #0a0a0a;      // neutral-950
-	--mds-sunken: #171717;       // neutral-900
-	--mds-hover: #262626;        // neutral-800
-	--mds-border: #262626;       // neutral-800
-	--mds-border-soft: #1f1f1f;
-	--mds-border-strong: #404040; // neutral-700
-	--mds-text: #fafafa;         // neutral-50
-	--mds-text-soft: #d4d4d4;    // neutral-300
-	--mds-muted: #a3a3a3;        // neutral-400
-	--mds-accent: #9d9bf5;
-	--mds-accent-hover: #b4b2f8;
+	--mds-bg: #09090b;            // zinc-950
+	--mds-surface: #18181b;       // zinc-900
+	--mds-rail-bg: #09090b;       // zinc-950
+	--mds-sunken: #18181b;        // zinc-900
+	--mds-hover: #27272a;         // zinc-800
+	--mds-border: #27272a;        // zinc-800
+	--mds-border-soft: #1c1c1f;
+	--mds-border-strong: #3f3f46; // zinc-700
+	--mds-text: #fafafa;          // zinc-50
+	--mds-text-soft: #d4d4d8;     // zinc-300
+	--mds-muted: #9f9fa9;         // zinc-400
+	--mds-accent: #7c86ff;        // indigo-400, lifted for dark
+	--mds-accent-hover: #969dff;
 	--mds-accent-soft: #232149;
 	--mds-good: #45c491;
 	--mds-warn: #d9a25c;
