@@ -109,17 +109,23 @@ body.mds-dark {
 
 // Chosen explicitly, so it does not wait on the OS.
 body.mds-dark {
-	--mds-bg: #09090b;            // zinc-950
+	// Measured from their Posts screen, and every value lands on zinc exactly.
+	//
+	// The important relationship: the rail and top bar are DARKER than the
+	// content (zinc-950 against zinc-900). In light mode the rail is the
+	// tinted surface against white; in dark it recedes further than the
+	// content instead. Both readings keep the content the brightest thing.
+	--mds-bg: #18181b;            // zinc-900 — content ground
 	--mds-surface: #18181b;       // zinc-900
-	--mds-rail-bg: #09090b;       // zinc-950
-	--mds-sunken: #18181b;        // zinc-900
+	--mds-rail-bg: #09090b;       // zinc-950 — rail and top bar recede
+	--mds-sunken: #09090b;        // zinc-950
 	--mds-hover: #27272a;         // zinc-800
 	--mds-border: #27272a;        // zinc-800
-	--mds-border-soft: #1c1c1f;
+	--mds-border-soft: #212124;
 	--mds-border-strong: #3f3f46; // zinc-700
 	--mds-text: #fafafa;          // zinc-50
 	--mds-text-soft: #d4d4d8;     // zinc-300
-	--mds-muted: #9f9fa9;         // zinc-400
+	--mds-muted: #71717b;         // zinc-500
 	--mds-accent: #7c86ff;        // indigo-400, lifted for dark
 	--mds-accent-hover: #969dff;
 	--mds-accent-soft: #232149;
@@ -353,27 +359,27 @@ body.wp-admin.mds-skin {
 
 	// ----------------------------------------------------------- list tables
 
+	// Their list table is not a card: no border, no radius, no shadow — a plain
+	// surface with hairline row rules running edge to edge. The card treatment
+	// belongs to dashboard metric panels, not to a table of rows.
 	.wp-list-table {
-		background: var(--mds-surface);
-		border: 1px solid var(--mds-border);
-		border-radius: var(--mds-radius-lg);
-		box-shadow: var(--mds-shadow);
+		background: transparent;
+		border: 0;
 		border-collapse: separate;
 		border-spacing: 0;
-		overflow: hidden;
 
 		thead th,
 		thead td,
 		tfoot th,
 		tfoot td {
-			background: var(--mds-sunken);
+			background: transparent;
 			border-bottom: 1px solid var(--mds-border);
 			color: var(--mds-muted);
-			font-size: 11px;
-			font-weight: 600;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
-			padding: 10px;
+			font-size: 13px;
+			font-weight: 500;
+			letter-spacing: 0;
+			text-transform: none;
+			padding: 10px 12px;
 		}
 
 		tfoot th,
@@ -391,7 +397,7 @@ body.wp-admin.mds-skin {
 		tbody th {
 			border-bottom: 1px solid var(--mds-border);
 			color: var(--mds-text-soft);
-			padding: 11px 10px;
+			padding: 14px 12px;
 		}
 
 		tbody tr:last-child td,
@@ -412,6 +418,7 @@ body.wp-admin.mds-skin {
 		.row-title {
 			color: var(--mds-text);
 			font-weight: 600;
+			font-size: 13px;
 		}
 
 		.row-actions {
@@ -432,13 +439,40 @@ body.wp-admin.mds-skin {
 		}
 	}
 
+	// Core renders the status filters as pipe-separated links. Their version is
+	// a pill group, which is what makes the count chips read as one control.
 	.subsubsub {
+		display: inline-flex;
+		gap: 2px;
+		margin: 0 0 12px;
+		padding: 3px;
+		background: var(--mds-sunken);
+		border-radius: var(--mds-radius);
 		color: var(--mds-muted);
+		font-size: 13px;
+
+		li {
+			margin: 0;
+			color: transparent; // hides core's pipe separators
+		}
+
+		a {
+			display: inline-block;
+			padding: 5px 11px;
+			border-radius: var(--mds-radius-sm);
+			color: var(--mds-muted);
+			text-decoration: none;
+
+			&:hover { color: var(--mds-text); }
+		}
 
 		a.current {
-			color: var(--mds-accent);
-			font-weight: 600;
+			background: var(--mds-border-strong);
+			color: var(--mds-text);
+			font-weight: 500;
 		}
+
+		.count { color: inherit; }
 	}
 
 	// ------------------------------------------------------------ postboxes
@@ -524,10 +558,12 @@ body.wp-admin.mds-skin {
 
 	// -------------------------------------------------------------- buttons
 
+	// Inverted rather than accent-filled: their primary button measured
+	// zinc-50 on the dark theme. The accent is saved for selection states.
 	.wp-core-ui .button-primary {
-		background: var(--mds-accent);
-		border-color: var(--mds-accent);
-		color: #fff;
+		background: var(--mds-text);
+		border-color: var(--mds-text);
+		color: var(--mds-bg);
 		border-radius: var(--mds-radius-sm);
 		font-weight: 600;
 		text-shadow: none;
@@ -535,13 +571,13 @@ body.wp-admin.mds-skin {
 
 		&:hover,
 		&:focus {
-			background: var(--mds-accent-hover);
-			border-color: var(--mds-accent-hover);
-			color: #fff;
+			background: var(--mds-text-soft);
+			border-color: var(--mds-text-soft);
+			color: var(--mds-bg);
 		}
 
 		&:focus {
-			box-shadow: 0 0 0 2px var(--mds-accent-soft);
+			box-shadow: 0 0 0 2px var(--mds-border-strong);
 		}
 	}
 

@@ -23,6 +23,7 @@ if ( boot && container ) {
 				siteName={ boot.siteName }
 				links={ boot.links }
 				isNetwork={ boot.isNetwork }
+				user={ boot.user }
 			/>
 			<Topbar
 				title={ boot.title }

@@ -326,7 +326,8 @@ final class Shell {
 
 		return array(
 			'name'   => $user->display_name ?: $user->user_login,
-			'avatar' => get_avatar_url( $user->ID, array( 'size' => 48 ) ),
+			'email'  => $user->user_email,
+			'avatar' => get_avatar_url( $user->ID, array( 'size' => 52 ) ),
 		);
 	}
 

@@ -18,6 +18,7 @@ import { navIcon } from './icons';
  * @param {string}   props.siteName  Site name for the header.
  * @param {Object}   props.links     Useful destinations.
  * @param {boolean}  props.isNetwork Whether this is a network admin screen.
+ * @param {Object}   props.user      Current user, for the account card.
  *
  * @return {JSX.Element} The sidebar.
  */
@@ -27,6 +28,7 @@ export default function Sidebar( {
 	siteName,
 	links,
 	isNetwork,
+	user,
 } ) {
 	const [ filter, setFilter ] = useState( '' );
 	const [ open, setOpen ] = useState( () => activeParent( items, current ) );
@@ -166,8 +168,13 @@ export default function Sidebar( {
 									>
 										{ navIcon( item.icon ) }
 										<span className="mds-nav__label">
-											{ item.label }
+											{ labelOf( item.label ) }
 										</span>
+										{ countOf( item.label ) && (
+											<span className="mds-nav__count">
+												{ countOf( item.label ) }
+											</span>
+										) }
 									</a>
 
 									{ expanded && item.children.length > 0 && (
@@ -207,8 +214,53 @@ export default function Sidebar( {
 					{ __( 'Nothing matches.', 'modern-dashboard' ) }
 				</p>
 			) }
+
+			{ user && (
+				<a className="mds-nav__user" href={ links.profile }>
+					<img
+						className="mds-nav__user-avatar"
+						src={ user.avatar }
+						alt=""
+						width="26"
+						height="26"
+					/>
+					<span className="mds-nav__user-text">
+						<span className="mds-nav__user-name">
+							{ user.name }
+						</span>
+						{ user.email && (
+							<span className="mds-nav__user-email">
+								{ user.email }
+							</span>
+						) }
+					</span>
+				</a>
+			) }
 		</nav>
 	);
+}
+
+/**
+ * The server appends update counts to a label as ` · N`. Splitting them here
+ * lets the count render as a pill instead of running into the label text.
+ *
+ * @param {string} label Raw label.
+ *
+ * @return {string} Label without its count.
+ */
+function labelOf( label ) {
+	return label.split( '\u2009·\u2009' )[ 0 ];
+}
+
+/**
+ * @param {string} label Raw label.
+ *
+ * @return {string|null} The count, when the label carries one.
+ */
+function countOf( label ) {
+	const parts = label.split( '\u2009·\u2009' );
+
+	return parts.length > 1 ? parts[ 1 ] : null;
 }
 
 /** Slugs that open each cluster, in the order the reference shows them. */
