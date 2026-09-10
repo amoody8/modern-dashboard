@@ -199,14 +199,14 @@ export default function BlockInspector( {
 			<footer className="md-inspector__footer">
 				<button
 					type="button"
-					className="button"
+					className="md-button md-button--ghost"
 					onClick={ onDuplicate }
 				>
 					{ __( 'Duplicate', 'modern-dashboard' ) }
 				</button>
 				<button
 					type="button"
-					className="button md-danger"
+					className="md-button md-button--danger"
 					onClick={ onRemove }
 				>
 					{ __( 'Remove', 'modern-dashboard' ) }

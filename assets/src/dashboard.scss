@@ -87,17 +87,6 @@
 
 	// ----------------------------------------------------------------- cards
 
-	.md-stat {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		padding: 14px 16px;
-		border: 1px solid var(--md-border);
-		border-radius: var(--md-radius);
-		background: var(--md-surface);
-		box-shadow: var(--md-shadow);
-	}
-
 	.md-stat__label {
 		color: var(--md-muted);
 		font-size: 12px;
@@ -130,14 +119,6 @@
 	}
 
 	// ---------------------------------------------------------------- panels
-
-	.md-panel {
-		margin-bottom: 16px;
-		border: 1px solid var(--md-border);
-		border-radius: var(--md-radius);
-		background: var(--md-surface);
-		box-shadow: var(--md-shadow);
-	}
 
 	.md-panel__header {
 		display: flex;
@@ -209,16 +190,6 @@
 
 	// ---------------------------------------------------------------- badges
 
-	.md-badge {
-		display: inline-block;
-		padding: 1px 8px;
-		border-radius: 999px;
-		font-size: 11px;
-		font-weight: 600;
-		line-height: 1.7;
-		white-space: nowrap;
-	}
-
 	.md-badge--muted {
 		background: #eef0f2;
 		color: var(--md-muted);
@@ -248,22 +219,6 @@
 		margin-bottom: 12px;
 	}
 
-	.md-field {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-
-		> label:not(.screen-reader-text) {
-			color: var(--md-muted);
-			font-size: 12px;
-		}
-
-		input,
-		select {
-			max-width: 100%;
-		}
-	}
-
 	.md-field--grow {
 		flex: 1 1 240px;
 	}
@@ -271,47 +226,6 @@
 	.md-field__help {
 		color: var(--md-muted);
 		font-size: 12px;
-	}
-
-	.md-table-wrap {
-		overflow-x: auto;
-		border: 1px solid var(--md-border);
-		border-radius: var(--md-radius);
-		background: var(--md-surface);
-		box-shadow: var(--md-shadow);
-	}
-
-	.md-table {
-		width: 100%;
-		border-collapse: collapse;
-
-		th,
-		td {
-			padding: 10px 14px;
-			border-bottom: 1px solid var(--md-border);
-			text-align: left;
-			vertical-align: top;
-		}
-
-		th {
-			background: #fbfbfc;
-			color: var(--md-muted);
-			font-size: 12px;
-			font-weight: 600;
-			white-space: nowrap;
-		}
-
-		tbody tr:last-child td {
-			border-bottom: none;
-		}
-
-		tbody tr:hover {
-			background: #fafbfc;
-		}
-
-		tbody tr.is-selected {
-			background: var(--md-info-bg);
-		}
 	}
 
 	.md-numeric {
@@ -355,15 +269,6 @@
 		flex-wrap: wrap;
 		gap: 4px;
 		margin-top: 4px;
-	}
-
-	.md-pagination {
-		display: flex;
-		gap: 12px;
-		align-items: center;
-		justify-content: flex-end;
-		margin-top: 12px;
-		color: var(--md-muted);
 	}
 
 	.md-pagination__summary {
@@ -482,22 +387,6 @@
 		padding: 16px;
 	}
 
-	.md-check {
-		display: flex;
-		gap: 8px;
-		align-items: flex-start;
-		padding: 8px 16px;
-
-		input {
-			flex: 0 0 auto;
-			margin: 2px 0 0;
-		}
-
-		label {
-			cursor: pointer;
-		}
-	}
-
 	.md-settings .md-field {
 		padding: 0 16px 16px;
 	}
@@ -507,23 +396,6 @@
 	}
 
 	// ------------------------------------------------------------- feedback
-
-	.md-notice {
-		display: flex;
-		gap: 8px;
-		align-items: flex-start;
-		justify-content: space-between;
-		margin-bottom: 12px;
-		padding: 10px 14px;
-		border-left: 4px solid var(--md-accent);
-		border-radius: 0 var(--md-radius) var(--md-radius) 0;
-		background: var(--md-info-bg);
-
-		ul {
-			margin: 4px 0 0;
-			padding-left: 18px;
-		}
-	}
 
 	.md-notice--good {
 		border-left-color: var(--md-good);
@@ -543,24 +415,6 @@
 		font-size: 16px;
 		line-height: 1;
 		cursor: pointer;
-	}
-
-	.md-empty {
-		padding: 24px 16px;
-		color: var(--md-muted);
-		text-align: center;
-
-		p {
-			margin: 4px auto 0;
-			max-width: 46ch;
-		}
-	}
-
-	.md-loading {
-		display: flex;
-		gap: 8px;
-		align-items: center;
-		color: var(--md-muted);
 	}
 
 	.md-loading__dot {
@@ -913,10 +767,6 @@
 		margin-top: 12px;
 		padding-top: 10px;
 		border-top: 1px solid var(--md-border);
-	}
-
-	.md-danger {
-		color: var(--md-bad);
 	}
 
 	// ---------------------------------------------------------------- canvas

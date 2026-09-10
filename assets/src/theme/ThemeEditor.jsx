@@ -279,7 +279,7 @@ export default function ThemeEditor() {
 				<div className="md-builder__actions">
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						onClick={ resetToDefaults }
 					>
 						{ __( 'Reset colours', 'modern-dashboard' ) }
@@ -287,7 +287,7 @@ export default function ThemeEditor() {
 					{ isSite && ! inherits && (
 						<button
 							type="button"
-							className="button md-danger"
+							className="md-button md-button--danger"
 							onClick={ clearOverride }
 						>
 							{ __( 'Follow network', 'modern-dashboard' ) }
@@ -295,7 +295,7 @@ export default function ThemeEditor() {
 					) }
 					<button
 						type="button"
-						className="button button-primary"
+						className="md-button"
 						onClick={ save }
 						disabled={ saving || ! dirty }
 					>

@@ -347,7 +347,7 @@ export default function ActivityLog() {
 				<nav className="md-pagination">
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						disabled={ query.page <= 1 }
 						onClick={ () =>
 							setQuery( ( c ) => ( { ...c, page: c.page - 1 } ) )
@@ -365,7 +365,7 @@ export default function ActivityLog() {
 					</span>
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						disabled={ query.page >= result.pages }
 						onClick={ () =>
 							setQuery( ( c ) => ( { ...c, page: c.page + 1 } ) )

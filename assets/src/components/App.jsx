@@ -207,7 +207,7 @@ export default function App() {
 					<div className="md-header__actions">
 						<button
 							type="button"
-							className="button"
+							className="md-button md-button--ghost"
 							onClick={ () => loadOverview( true ) }
 							disabled={ loading }
 						>
@@ -215,7 +215,7 @@ export default function App() {
 						</button>
 						<button
 							type="button"
-							className="button button-primary"
+							className="md-button"
 							onClick={ collectNow }
 							disabled={ collecting }
 						>

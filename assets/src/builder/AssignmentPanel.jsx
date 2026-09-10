@@ -120,7 +120,7 @@ export default function AssignmentPanel( {
 			<p className="md-assignments__actions">
 				<button
 					type="button"
-					className="button"
+					className="md-button md-button--ghost"
 					onClick={ save }
 					disabled={ saving }
 				>

@@ -363,14 +363,14 @@ export default function Builder( { overview } ) {
 				<div className="md-builder__actions">
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						onClick={ createTemplate }
 					>
 						{ __( 'New', 'modern-dashboard' ) }
 					</button>
 					<button
 						type="button"
-						className="button md-danger"
+						className="md-button md-button--danger"
 						onClick={ removeTemplate }
 						disabled={ ! draft.id || draft.id === defaultId }
 						title={
@@ -386,7 +386,7 @@ export default function Builder( { overview } ) {
 					</button>
 					<button
 						type="button"
-						className="button button-primary"
+						className="md-button"
 						onClick={ save }
 						disabled={ saving || ! dirty }
 					>

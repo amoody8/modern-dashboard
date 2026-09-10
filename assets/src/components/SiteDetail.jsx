@@ -308,7 +308,7 @@ export default function SiteDetail( {
 
 					<footer className="md-detail__footer">
 						<a
-							className="button"
+							className="md-button md-button--ghost"
 							href={ `${ site.url }/wp-admin/` }
 						>
 							{ __( 'Open site admin', 'modern-dashboard' ) }
@@ -316,7 +316,7 @@ export default function SiteDetail( {
 						{ canManage && (
 							<button
 								type="button"
-								className="button button-primary"
+								className="md-button"
 								onClick={ refresh }
 								disabled={ refreshing }
 							>
@@ -333,7 +333,7 @@ export default function SiteDetail( {
 				<footer className="md-detail__footer">
 					<button
 						type="button"
-						className="button button-primary"
+						className="md-button"
 						onClick={ refresh }
 						disabled={ refreshing }
 					>

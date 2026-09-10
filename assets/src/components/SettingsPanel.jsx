@@ -368,11 +368,7 @@ export default function SettingsPanel( { onSaved } ) {
 			</Panel>
 
 			<p>
-				<button
-					type="submit"
-					className="button button-primary"
-					disabled={ saving }
-				>
+				<button type="submit" className="md-button" disabled={ saving }>
 					{ saving
 						? __( 'Saving…', 'modern-dashboard' )
 						: __( 'Save settings', 'modern-dashboard' ) }

@@ -358,21 +358,21 @@ export default function MenuEditor() {
 				<div className="md-builder__actions">
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						onClick={ rebuildCatalogue }
 					>
 						{ __( 'Rebuild catalogue', 'modern-dashboard' ) }
 					</button>
 					<button
 						type="button"
-						className="button md-danger"
+						className="md-button md-button--danger"
 						onClick={ resetRole }
 					>
 						{ __( 'Clear this role', 'modern-dashboard' ) }
 					</button>
 					<button
 						type="button"
-						className="button button-primary"
+						className="md-button"
 						onClick={ save }
 						disabled={ saving || ! dirty }
 					>

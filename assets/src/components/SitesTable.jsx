@@ -351,7 +351,7 @@ export default function SitesTable( {
 				>
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						disabled={ result.page <= 1 }
 						onClick={ () => setPage( result.page - 1 ) }
 					>
@@ -371,7 +371,7 @@ export default function SitesTable( {
 					</span>
 					<button
 						type="button"
-						className="button"
+						className="md-button md-button--ghost"
 						disabled={ result.page >= result.pages }
 						onClick={ () => setPage( result.page + 1 ) }
 					>
