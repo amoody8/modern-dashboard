@@ -24,6 +24,10 @@ use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
 use ModernDashboard\Admin\PaletteGate;
 use ModernDashboard\Admin\Shell;
+use ModernDashboard\Audit\Events;
+use ModernDashboard\Audit\LogRepository;
+use ModernDashboard\Audit\Recorder;
+use ModernDashboard\Audit\Schema;
 use ModernDashboard\Palette\CommandRegistry;
 use ModernDashboard\Palette\CommandResolver;
 use ModernDashboard\Palette\IndexBuilder;
@@ -32,6 +36,7 @@ use ModernDashboard\Palette\SearchController;
 use ModernDashboard\Palette\SearchIndex;
 use ModernDashboard\Rest\BuilderRoutes;
 use ModernDashboard\Rest\MenuRoutes;
+use ModernDashboard\Rest\AuditRoutes;
 use ModernDashboard\Rest\PaletteRoutes;
 use ModernDashboard\Rest\ThemeRoutes;
 use ModernDashboard\Rest\Routes;
@@ -61,6 +66,7 @@ final class Plugin {
 	private ?CommandRegistry $commands     = null;
 	private ?SearchIndex $search_index     = null;
 	private ?PaletteGate $palette_gate     = null;
+	private ?LogRepository $audit_log      = null;
 
 	public function __construct( string $file, string $version ) {
 		$this->file    = $file;
@@ -127,6 +133,10 @@ final class Plugin {
 		return $this->palette_gate ??= new PaletteGate( $this->settings() );
 	}
 
+	public function audit_log(): LogRepository {
+		return $this->audit_log ??= new LogRepository();
+	}
+
 	public function templates(): TemplateRepository {
 		return $this->templates ??= new TemplateRepository(
 			$this->registry(),
@@ -174,6 +184,13 @@ final class Plugin {
 		// to re-register hooks.
 		( new IndexBuilder( $this->search_index(), $this->settings() ) )->register();
 
+		// The table may be missing on a network that upgraded rather than
+		// activated; install() is a no-op once the version matches.
+		Schema::install();
+		( new Events( new Recorder( $this->settings() ) ) )->register();
+		( new AuditRoutes( $this->audit_log(), $this->settings() ) )->register();
+		$this->audit_log()->register( $this->settings() );
+
 		( new Assets( $this, $palette_gate ) )->register();
 
 		// Deliberately on `init`: loading a textdomain earlier makes WordPress
@@ -203,6 +220,8 @@ final class Plugin {
 
 		$settings = new Settings();
 		$settings->all(); // Persists defaults on first read.
+
+		Schema::install();
 
 		Scheduler::schedule( $settings->get( 'refresh_interval' ) );
 	}

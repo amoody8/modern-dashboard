@@ -46,6 +46,8 @@ final class Settings {
 			'skin_enabled'            => true,
 			'shell_enabled'           => true,
 			'admin_theme'             => 'dark',
+			'audit_enabled'           => true,
+			'audit_retention_days'    => 90,
 			'stale_after'             => 2 * HOUR_IN_SECONDS,
 			'inactive_threshold_days' => 90,
 			'excluded_sites'          => array(),
@@ -114,6 +116,9 @@ final class Settings {
 			'admin_theme'             => in_array( (string) ( $input['admin_theme'] ?? '' ), self::THEMES, true )
 				? (string) $input['admin_theme']
 				: $defaults['admin_theme'],
+			'audit_enabled'           => (bool) ( $input['audit_enabled'] ?? $defaults['audit_enabled'] ),
+			// 0 keeps everything; the cap stops a typo from meaning "forever".
+			'audit_retention_days'    => max( 0, min( 3650, (int) ( $input['audit_retention_days'] ?? $defaults['audit_retention_days'] ) ) ),
 			'stale_after'             => max( 300, min( DAY_IN_SECONDS, (int) ( $input['stale_after'] ?? $defaults['stale_after'] ) ) ),
 			'inactive_threshold_days' => max( 1, min( 3650, (int) ( $input['inactive_threshold_days'] ?? $defaults['inactive_threshold_days'] ) ) ),
 			'excluded_sites'          => array_values( array_unique( array_filter( array_map( 'absint', (array) ( $input['excluded_sites'] ?? array() ) ) ) ) ),
@@ -149,6 +154,12 @@ final class Settings {
 			'admin_theme'             => array(
 				'type' => 'string',
 				'enum' => self::THEMES,
+			),
+			'audit_enabled'           => array( 'type' => 'boolean' ),
+			'audit_retention_days'    => array(
+				'type'    => 'integer',
+				'minimum' => 0,
+				'maximum' => 3650,
 			),
 			'stale_after'             => array(
 				'type'    => 'integer',

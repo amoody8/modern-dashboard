@@ -60,6 +60,18 @@ function is_network_admin() { return $GLOBALS['is_network_admin'] ?? false; }
 function is_user_admin() { return $GLOBALS['is_user_admin'] ?? false; }
 function is_user_logged_in() { return $GLOBALS['logged_in'] ?? true; }
 function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
+// Minimal $wpdb: enough for the recorder's insert path. The repository's
+// queries are SQL and belong in wp-env, not here.
+class MDB_Test_wpdb {
+	public $base_prefix = 'wp_';
+	public function insert( $table, $row ) { $GLOBALS['audit_rows'][] = $row; return 1; }
+	public function get_var( $sql ) { return 'wp_modern_dashboard_audit'; }
+	public function prepare( $sql, ...$a ) { return $sql; }
+	public function get_charset_collate() { return ''; }
+	public function esc_like( $s ) { return $s; }
+}
+$GLOBALS['wpdb'] = new MDB_Test_wpdb();
+$GLOBALS['audit_rows'] = [];
 function current_user_can( $cap ) { return ! empty( $GLOBALS['user_caps'][ $cap ] ); }
 function get_current_user_id() { return $GLOBALS['current_user_id'] ?? 1; }
 function get_post_types( $args = [], $output = 'names' ) { return [ 'post' => 'post', 'page' => 'page', 'attachment' => 'attachment' ]; }
@@ -811,6 +823,56 @@ check( 'never loads for a logged-out request', ( new ModernDashboard\Admin\Palet
 $GLOBALS['logged_in'] = true;
 
 $GLOBALS['user_caps'] = [];
+
+// --- Audit settings and event filtering -------------------------------------
+
+echo "\nAudit log\n";
+
+check( 'audit_enabled defaults true', Settings::defaults()['audit_enabled'], true );
+check( 'retention defaults to 90 days', Settings::defaults()['audit_retention_days'], 90 );
+check( 'retention clamps a silly value', $settings->sanitize( [ 'audit_retention_days' => 99999 ] )['audit_retention_days'], 3650 );
+check( 'retention allows 0 for keep-everything', $settings->sanitize( [ 'audit_retention_days' => 0 ] )['audit_retention_days'], 0 );
+check( 'retention floors negatives at 0', $settings->sanitize( [ 'audit_retention_days' => -5 ] )['audit_retention_days'], 0 );
+
+// The recorder must not write when logging is off, and must never throw —
+// it sits on the hot path of every write request on every site.
+$GLOBALS['audit_rows'] = [];
+
+$off = new Settings();
+$off->update( [ 'audit_enabled' => false ] );
+( new ModernDashboard\Audit\Recorder( $off ) )->record( 'post.published', [ 'object_name' => 'Nope' ] );
+check( 'nothing recorded while disabled', count( $GLOBALS['audit_rows'] ), 0 );
+
+$on = new Settings();
+$on->update( [ 'audit_enabled' => true ] );
+( new ModernDashboard\Audit\Recorder( $on ) )->record( 'post.published', [
+	'object_type' => 'post',
+	'object_id'   => 42,
+	'object_name' => 'Hello',
+	'context'     => [ 'from' => 'draft', 'to' => 'publish' ],
+] );
+check( 'an event is recorded when enabled', count( $GLOBALS['audit_rows'] ), 1 );
+check( 'the action is stored', $GLOBALS['audit_rows'][0]['action'], 'post.published' );
+check( 'the blog is stamped', $GLOBALS['audit_rows'][0]['blog_id'], 1 );
+check( 'context is json', json_decode( $GLOBALS['audit_rows'][0]['context'], true )['to'], 'publish' );
+
+// A caller must not be able to put an unbounded payload in a log row.
+$GLOBALS['audit_rows'] = [];
+( new ModernDashboard\Audit\Recorder( $on ) )->record( 'post.updated', [
+	'object_name' => str_repeat( 'x', 900 ),
+	'context'     => array_fill_keys( array_map( fn( $i ) => "k$i", range( 1, 40 ) ), 'v' ),
+] );
+check( 'long names are truncated', mb_strlen( $GLOBALS['audit_rows'][0]['object_name'] ), 300 );
+check( 'context keys are bounded', count( json_decode( $GLOBALS['audit_rows'][0]['context'], true ) ), 12 );
+
+// Non-scalar context would not survive JSON round-tripping meaningfully.
+$GLOBALS['audit_rows'] = [];
+( new ModernDashboard\Audit\Recorder( $on ) )->record( 'x.y', [ 'context' => [ 'obj' => new stdClass(), 'ok' => 'yes' ] ] );
+$ctx = json_decode( $GLOBALS['audit_rows'][0]['context'], true );
+check( 'objects in context are dropped', $ctx['obj'], null );
+check( 'scalars in context survive', $ctx['ok'], 'yes' );
+
+$settings->update( [ 'audit_enabled' => true ] );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail === 0 ? 0 : 1 );

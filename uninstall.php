@@ -23,6 +23,7 @@ use ModernDashboard\Data\NetworkAggregator;
 use ModernDashboard\Data\Store;
 use ModernDashboard\Menu\MenuCatalogue;
 use ModernDashboard\Menu\MenuRules;
+use ModernDashboard\Audit\Schema as AuditSchema;
 use ModernDashboard\Palette\SearchIndex;
 use ModernDashboard\Settings\Settings;
 use ModernDashboard\Theme\ThemeRepository;
@@ -68,6 +69,10 @@ delete_network_option( null, MenuRules::OPTION );
 delete_network_option( null, ThemeRepository::NETWORK_OPTION );
 delete_network_option( null, Store::INDEX_OPTION );
 delete_network_option( null, SearchIndex::INDEX_OPTION );
+
+// The audit log is a table, not an option. Dropped only here — deactivating a
+// plugin must never destroy an audit trail.
+AuditSchema::drop();
 delete_network_option( null, Scheduler::LAST_RUN );
 
 delete_site_transient( NetworkAggregator::TRANSIENT );
