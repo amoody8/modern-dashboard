@@ -617,6 +617,35 @@
 		}
 	}
 
+	// -------------------------------------------------------------- activity
+
+	.md-activity__what {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	.md-activity__object {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.md-activity__context {
+		font-size: var(--md-text-xs);
+		color: var(--md-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.md-pagination {
+		display: flex;
+		align-items: center;
+		gap: var(--md-space-3);
+		padding: var(--md-space-3) 0;
+		font-size: var(--md-text-sm);
+		color: var(--md-muted);
+	}
+
 	// ------------------------------------------------------------- reduced motion
 
 	@media (prefers-reduced-motion: reduce) {

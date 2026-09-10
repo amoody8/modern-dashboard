@@ -289,6 +289,41 @@ export default function SettingsPanel( { onSaved } ) {
 
 				<Checkbox
 					label={ __(
+						'Record administrative activity — who published, activated, changed a role or switched a theme, across every site',
+						'modern-dashboard'
+					) }
+					checked={ settings.audit_enabled }
+					onChange={ ( event ) =>
+						set( 'audit_enabled', event.target.checked )
+					}
+				/>
+
+				<Field
+					label={ __( 'Keep activity for', 'modern-dashboard' ) }
+					help={ __(
+						'Days. Older entries are removed on the next collection run. 0 keeps everything.',
+						'modern-dashboard'
+					) }
+				>
+					{ ( id ) => (
+						<input
+							id={ id }
+							type="number"
+							min="0"
+							max="3650"
+							value={ settings.audit_retention_days }
+							onChange={ ( event ) =>
+								set(
+									'audit_retention_days',
+									Number( event.target.value )
+								)
+							}
+						/>
+					) }
+				</Field>
+
+				<Checkbox
+					label={ __(
 						'Enable the command palette — Cmd/Ctrl+K on every admin screen, searching sites, content and admin screens. Network-wide content search stays limited to network administrators.',
 						'modern-dashboard'
 					) }

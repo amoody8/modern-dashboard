@@ -136,3 +136,93 @@ export function formatRelative( timestamp ) {
 export function formatAddress( domain, path ) {
 	return `${ domain }${ path === '/' ? '' : path }`.replace( /\/$/, '' );
 }
+
+/**
+ * Precise relative time, for timestamps we actually know precisely.
+ *
+ * `formatRelative` is deliberately coarse because metrics come from a cache
+ * that is minutes old — claiming second accuracy there would overstate what we
+ * know. An audit entry is the opposite: it records the moment something
+ * happened, so "12 seconds ago" is true and useful, and rounding it to
+ * "moments ago" throws away the ordering the reader is scanning for.
+ *
+ * @param {number|null|undefined} timestamp Unix timestamp in seconds.
+ * @return {string} Relative description.
+ */
+export function formatExactRelative( timestamp ) {
+	if ( ! timestamp ) {
+		return '—';
+	}
+
+	const seconds = Math.max( 0, Math.floor( Date.now() / 1000 ) - timestamp );
+
+	if ( seconds < 60 ) {
+		/* translators: %d: number of seconds. */
+		const label = _n(
+			'%d second ago',
+			'%d seconds ago',
+			seconds,
+			'modern-dashboard'
+		);
+
+		return sprintf( label, seconds );
+	}
+
+	const minutes = Math.floor( seconds / 60 );
+
+	if ( minutes < 60 ) {
+		/* translators: %d: number of minutes. */
+		const label = _n(
+			'%d minute ago',
+			'%d minutes ago',
+			minutes,
+			'modern-dashboard'
+		);
+
+		return sprintf( label, minutes );
+	}
+
+	const hours = Math.floor( minutes / 60 );
+
+	if ( hours < 24 ) {
+		/* translators: %d: number of hours. */
+		const label = _n(
+			'%d hour ago',
+			'%d hours ago',
+			hours,
+			'modern-dashboard'
+		);
+
+		return sprintf( label, hours );
+	}
+
+	const days = Math.floor( hours / 24 );
+
+	if ( days < 30 ) {
+		/* translators: %d: number of days. */
+		const label = _n(
+			'%d day ago',
+			'%d days ago',
+			days,
+			'modern-dashboard'
+		);
+
+		return sprintf( label, days );
+	}
+
+	return formatDate( timestamp );
+}
+
+/**
+ * Absolute local time, for the title attribute behind a relative one.
+ *
+ * @param {number|null|undefined} timestamp Unix timestamp in seconds.
+ * @return {string} Localised date and time.
+ */
+export function formatDate( timestamp ) {
+	if ( ! timestamp ) {
+		return '—';
+	}
+
+	return new Date( timestamp * 1000 ).toLocaleString();
+}

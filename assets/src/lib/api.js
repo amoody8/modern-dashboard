@@ -63,6 +63,8 @@ export const api = {
 
 	sites: ( params ) => request( `sites${ query( params ) }` ),
 
+	auditLog: ( params ) => request( `audit${ query( params ) }` ),
+
 	site: ( id ) => request( `sites/${ id }` ),
 
 	refreshSite: ( id ) =>
