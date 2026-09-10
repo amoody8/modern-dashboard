@@ -21,6 +21,14 @@ final class Settings {
 
 	public const INTERVALS = array( 'mdash_quarter_hourly', 'hourly', 'twicedaily', 'daily' );
 
+	/**
+	 * Admin themes.
+	 *
+	 * `system` follows the OS. It is a genuine third choice rather than a
+	 * shade of the other two, which is why this is not a boolean.
+	 */
+	public const THEMES = array( 'dark', 'light', 'system' );
+
 	/** @var array<string,mixed>|null */
 	private ?array $cache = null;
 
@@ -37,6 +45,7 @@ final class Settings {
 			'palette_enabled'         => false,
 			'skin_enabled'            => true,
 			'shell_enabled'           => true,
+			'admin_theme'             => 'dark',
 			'stale_after'             => 2 * HOUR_IN_SECONDS,
 			'inactive_threshold_days' => 90,
 			'excluded_sites'          => array(),
@@ -102,6 +111,9 @@ final class Settings {
 			'palette_enabled'         => (bool) ( $input['palette_enabled'] ?? $defaults['palette_enabled'] ),
 			'skin_enabled'            => (bool) ( $input['skin_enabled'] ?? $defaults['skin_enabled'] ),
 			'shell_enabled'           => (bool) ( $input['shell_enabled'] ?? $defaults['shell_enabled'] ),
+			'admin_theme'             => in_array( (string) ( $input['admin_theme'] ?? '' ), self::THEMES, true )
+				? (string) $input['admin_theme']
+				: $defaults['admin_theme'],
 			'stale_after'             => max( 300, min( DAY_IN_SECONDS, (int) ( $input['stale_after'] ?? $defaults['stale_after'] ) ) ),
 			'inactive_threshold_days' => max( 1, min( 3650, (int) ( $input['inactive_threshold_days'] ?? $defaults['inactive_threshold_days'] ) ) ),
 			'excluded_sites'          => array_values( array_unique( array_filter( array_map( 'absint', (array) ( $input['excluded_sites'] ?? array() ) ) ) ) ),
@@ -134,6 +146,10 @@ final class Settings {
 			'palette_enabled'         => array( 'type' => 'boolean' ),
 			'skin_enabled'            => array( 'type' => 'boolean' ),
 			'shell_enabled'           => array( 'type' => 'boolean' ),
+			'admin_theme'             => array(
+				'type' => 'string',
+				'enum' => self::THEMES,
+			),
 			'stale_after'             => array(
 				'type'    => 'integer',
 				'minimum' => 300,

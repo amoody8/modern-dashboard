@@ -75,17 +75,14 @@
 	--mds-rail: calc(var(--mds-sidebar) + var(--mds-gap) * 2);
 }
 
-// The dark palette.
+// The dark palette, and the default.
 //
-// Deliberately NOT gated on `prefers-color-scheme` alone. `admin-color-modern`
-// is WordPress's default, so pairing it with a dark OS meant inferring a
-// preference nobody expressed — anyone on a dark Mac got a dark admin they
-// never asked for, and could not turn off without changing their OS.
-//
-// It now requires the one WordPress scheme that actually says "I want dark",
-// or an explicit opt-in via the setting, which adds `mds-dark`.
-body.admin-color-midnight,
-body.mds-dark {
+// Applied from a class the server stamps on the body, not from a media query:
+// the setting is the authority, and only `system` defers to the OS. An earlier
+// version inferred dark from WordPress's *default* colour scheme plus a dark
+// OS, which gave people a theme they never chose.
+body.mds-theme-dark,
+body.mds-theme-system {
 	@media (prefers-color-scheme: dark) {
 		--mds-bg: #131315;
 		--mds-surface: #18181b;
@@ -109,7 +106,7 @@ body.mds-dark {
 }
 
 // Chosen explicitly, so it does not wait on the OS.
-body.mds-dark {
+body.mds-theme-dark {
 	// Measured from their Posts screen, and every value lands on zinc exactly.
 	//
 	// The important relationship: the rail and top bar are DARKER than the

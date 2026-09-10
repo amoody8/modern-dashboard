@@ -137,8 +137,8 @@
 // with a dark OS inferred a preference nobody expressed: anyone on a dark Mac
 // got a dark admin they never chose and could not turn off from here.
 @media (prefers-color-scheme: dark) {
-	body.admin-color-midnight .modern-dashboard,
-	body.mds-dark .modern-dashboard {
+	body.mds-theme-dark .modern-dashboard,
+	body.mds-theme-system .modern-dashboard {
 		--md-bg: #12141a;
 		--md-surface: #1a1d25;
 		--md-surface-sunken: #16181f;
@@ -173,4 +173,33 @@
 		--md-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
 		--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
 	}
+}
+
+// Chosen explicitly: the same tokens, applied without waiting on the OS.
+body.mds-theme-dark .modern-dashboard {
+	--md-bg: #18181b;
+	--md-surface: #1d1d1f;
+	--md-surface-sunken: #141416;
+	--md-surface-hover: #27272a;
+	--md-border: #141416;
+	--md-border-strong: #3f3f46;
+	--md-text: #fafafa;
+	--md-text-soft: #d4d4d8;
+	--md-muted: #71717b;
+	--md-accent: #7c86ff;
+	--md-accent-hover: #969dff;
+	--md-accent-soft: #1c1f49;
+	--md-accent-text: #18181b;
+	--md-good: #45c491;
+	--md-good-bg: #16302a;
+	--md-warn: #d9a25c;
+	--md-warn-bg: #33260f;
+	--md-bad: #ef8378;
+	--md-bad-bg: #3a1f1d;
+	--md-info: #7db4ee;
+	--md-info-bg: #17273a;
+	--md-chart-bar: #7c86ff;
+	--md-chart-track: #27272a;
+	--md-shadow: none;
+	--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
 }

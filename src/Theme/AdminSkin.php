@@ -94,7 +94,16 @@ final class AdminSkin {
 			return $classes;
 		}
 
-		return trim( $classes . ' mds-skin' );
+		// The theme is stamped on the body rather than left to a media query,
+		// so "dark" and "light" are decisions the CSS can act on directly and
+		// only "system" defers to the OS.
+		$theme = (string) $this->settings->get( 'admin_theme' );
+
+		if ( ! in_array( $theme, Settings::THEMES, true ) ) {
+			$theme = 'dark';
+		}
+
+		return trim( $classes . ' mds-skin mds-theme-' . $theme );
 	}
 
 	public function render_bypass_notice(): void {

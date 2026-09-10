@@ -245,6 +245,37 @@ export default function SettingsPanel( { onSaved } ) {
 					}
 				/>
 
+				<Field
+					label={ __( 'Admin theme', 'modern-dashboard' ) }
+					help={ __(
+						'Applies to every admin screen. “Follow the system” uses the operating system’s light or dark preference.',
+						'modern-dashboard'
+					) }
+				>
+					{ ( id ) => (
+						<select
+							id={ id }
+							value={ settings.admin_theme }
+							onChange={ ( event ) =>
+								set( 'admin_theme', event.target.value )
+							}
+						>
+							<option value="dark">
+								{ __( 'Dark', 'modern-dashboard' ) }
+							</option>
+							<option value="light">
+								{ __( 'Light', 'modern-dashboard' ) }
+							</option>
+							<option value="system">
+								{ __(
+									'Follow the system',
+									'modern-dashboard'
+								) }
+							</option>
+						</select>
+					) }
+				</Field>
+
 				<Checkbox
 					label={ __(
 						'Restyle the WordPress admin — applies the dashboard\u2019s look to the sidebar, toolbar, list tables and forms on every screen',

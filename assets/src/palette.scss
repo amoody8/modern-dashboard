@@ -166,8 +166,8 @@
 // scheme that means "dark", or the explicit opt-in — never the default scheme
 // plus a dark OS, which is a preference nobody expressed.
 @media (prefers-color-scheme: dark) {
-	body.admin-color-midnight .modern-dashboard,
-	body.mds-dark .modern-dashboard {
+	body.mds-theme-dark .modern-dashboard,
+	body.mds-theme-system .modern-dashboard {
 		// Darker, not lighter: a pale scrim over a dark page reads as fog.
 		--md-scrim: rgba(0, 0, 0, 0.65);
 		// One step lighter than --md-surface. Elevation in a dark UI is
