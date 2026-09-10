@@ -682,7 +682,6 @@ check( 'records() reads several at once', array_keys( $search->records( [ 3, 999
 echo "\nIndexBuilder signature\n";
 
 $builder   = new ModernDashboard\Palette\IndexBuilder( new SearchIndex(), new Settings() );
-$signature = new ReflectionMethod( $builder, 'signature' );
 
 $entries_a = [
 	[ 'type' => 'post', 'id' => 1, 'title' => 'Hello', 'url' => 'u1', 'at' => 100 ],
@@ -699,22 +698,21 @@ $entries_changed   = [
 	[ 'type' => 'post', 'id' => 2, 'title' => 'World', 'url' => 'u2', 'at' => 200 ],
 ];
 
-check( 'signature ignores timestamps', $signature->invoke( $builder, $entries_a ), $signature->invoke( $builder, $entries_b ) );
-check( 'signature is order independent', $signature->invoke( $builder, $entries_a ), $signature->invoke( $builder, $entries_reordered ) );
-check( 'signature changes when a title changes', $signature->invoke( $builder, $entries_a ) !== $signature->invoke( $builder, $entries_changed ), true );
+check( 'signature ignores timestamps', $builder->signature( $entries_a ), $builder->signature( $entries_b ) );
+check( 'signature is order independent', $builder->signature( $entries_a ), $builder->signature( $entries_reordered ) );
+check( 'signature changes when a title changes', $builder->signature( $entries_a ) !== $builder->signature( $entries_changed ), true );
 
 // --- IndexBuilder freshness skip --------------------------------------------
 
 echo "\nIndexBuilder freshness\n";
 
-$changed = new ReflectionMethod( $builder, 'changed_since' );
 
 $fresh_site = new WP_Site( [ 'blog_id' => 5, 'blogname' => 'Fresh', 'domain' => 'f.example', 'path' => '/', 'siteurl' => 'https://f.example' ] );
 $fresh_site->last_updated = gmdate( 'Y-m-d H:i:s', time() - 60 );
 
-check( 'a never-indexed site is always built', $changed->invoke( $builder, $fresh_site, 0 ), true );
-check( 'a site updated since the last pass is rebuilt', $changed->invoke( $builder, $fresh_site, time() - 3600 ), true );
-check( 'an unchanged site is skipped before the queries run', $changed->invoke( $builder, $fresh_site, time() ), false );
+check( 'a never-indexed site is always built', $builder->changed_since( $fresh_site, 0 ), true );
+check( 'a site updated since the last pass is rebuilt', $builder->changed_since( $fresh_site, time() - 3600 ), true );
+check( 'an unchanged site is skipped before the queries run', $builder->changed_since( $fresh_site, time() ), false );
 
 // --- SearchController: the tenant boundary ----------------------------------
 

@@ -124,8 +124,10 @@ final class IndexBuilder {
 	 * whose only change is a new account waits for the next content change or
 	 * for a manual refresh. That is the right trade for a search index that is
 	 * already eventually consistent.
+	 *
+	 * Public for the same reason as `signature()`.
 	 */
-	private function changed_since( \WP_Site $site, int $indexed_at ): bool {
+	public function changed_since( \WP_Site $site, int $indexed_at ): bool {
 		if ( 0 === $indexed_at ) {
 			return true;
 		}
@@ -269,9 +271,14 @@ final class IndexBuilder {
 	 * the reduced shape makes the signature order-independent, so a reordered
 	 * result set is not mistaken for a changed one.
 	 *
+	 * Public because the smoke tests assert on it directly. Reflecting into a
+	 * private method needs `setAccessible()` on PHP 8.0 and is deprecated on
+	 * 8.5, so no single call satisfies the versions this plugin supports —
+	 * and a guard this load-bearing should be part of the contract anyway.
+	 *
 	 * @param array<int,array<string,mixed>> $entries Entries to fingerprint.
 	 */
-	private function signature( array $entries ): string {
+	public function signature( array $entries ): string {
 		$reduced = array();
 
 		foreach ( $entries as $entry ) {

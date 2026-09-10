@@ -8,12 +8,20 @@ jobs:
   php:
     name: PHP
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor this plugin claims to support, and a current release.
+        # A reflection call that PHP 8.0 requires is deprecated by 8.5, so a
+        # single version cannot catch that class of break.
+        php-version: [ '8.0', '8.3' ]
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: ${{ matrix.php-version }}
           coverage: none
           tools: composer
 
