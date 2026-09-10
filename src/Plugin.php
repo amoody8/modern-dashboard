@@ -37,6 +37,9 @@ use ModernDashboard\Palette\SearchIndex;
 use ModernDashboard\Rest\BuilderRoutes;
 use ModernDashboard\Rest\MenuRoutes;
 use ModernDashboard\Rest\AuditRoutes;
+use ModernDashboard\Roles\CapabilityCatalogue;
+use ModernDashboard\Roles\RoleApplier;
+use ModernDashboard\Roles\RoleRules;
 use ModernDashboard\Rest\PaletteRoutes;
 use ModernDashboard\Rest\ThemeRoutes;
 use ModernDashboard\Rest\Routes;
@@ -67,6 +70,8 @@ final class Plugin {
 	private ?SearchIndex $search_index     = null;
 	private ?PaletteGate $palette_gate     = null;
 	private ?LogRepository $audit_log      = null;
+	private ?RoleRules $role_rules         = null;
+	private ?CapabilityCatalogue $cap_cat  = null;
 
 	public function __construct( string $file, string $version ) {
 		$this->file    = $file;
@@ -137,6 +142,14 @@ final class Plugin {
 		return $this->audit_log ??= new LogRepository();
 	}
 
+	public function role_rules(): RoleRules {
+		return $this->role_rules ??= new RoleRules();
+	}
+
+	public function capability_catalogue(): CapabilityCatalogue {
+		return $this->cap_cat ??= new CapabilityCatalogue();
+	}
+
 	public function templates(): TemplateRepository {
 		return $this->templates ??= new TemplateRepository(
 			$this->registry(),
@@ -189,6 +202,12 @@ final class Plugin {
 		Schema::install();
 		( new Events( new Recorder( $this->settings() ) ) )->register();
 		( new AuditRoutes( $this->audit_log(), $this->settings() ) )->register();
+
+		// Registered unconditionally; both check their own enabled state when
+		// their hooks fire, so switching the feature on does not wait for a
+		// request that happens to re-register hooks.
+		$this->capability_catalogue()->register();
+		( new RoleApplier( $this->role_rules() ) )->register();
 		$this->audit_log()->register( $this->settings() );
 
 		( new Assets( $this, $palette_gate ) )->register();
