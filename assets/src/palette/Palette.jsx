@@ -55,18 +55,35 @@ export default function Palette() {
 
 	const listId = useId();
 
-	const show = useCallback( () => setOpen( true ), [] );
-	usePaletteHotkey( show );
-	useFocusTrap( containerRef, open );
-
-	const close = useCallback( () => {
-		setOpen( false );
+	const reset = useCallback( () => {
 		setTerm( '' );
 		setRemote( EMPTY_REMOTE );
 		setSelected( 0 );
 		setError( null );
 		setStatus( 'idle' );
 	}, [] );
+
+	// Toggling rather than opening: pressing the shortcut again is how people
+	// dismiss a palette they opened by accident. Closing this way clears the
+	// search too, so reopening does not present a stale term and its results.
+	//
+	// The reset happens here rather than inside the setOpen updater — an
+	// updater must be pure, and StrictMode calls it twice.
+	const toggle = useCallback( () => {
+		if ( open ) {
+			reset();
+		}
+
+		setOpen( ! open );
+	}, [ open, reset ] );
+
+	usePaletteHotkey( toggle, open );
+	useFocusTrap( containerRef, open );
+
+	const close = useCallback( () => {
+		setOpen( false );
+		reset();
+	}, [ reset ] );
 
 	// Commands arrive once and stay; they are what makes the first keystroke
 	// feel instant while the network query is still in flight.

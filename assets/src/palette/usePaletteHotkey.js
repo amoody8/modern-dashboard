@@ -52,9 +52,10 @@ function isEditableTarget( target ) {
 }
 
 /**
- * @param {Function} onTrigger Called when the palette should open.
+ * @param {Function} onTrigger Called when the shortcut fires.
+ * @param {boolean}  isOpen    Whether the palette is currently open.
  */
-export function usePaletteHotkey( onTrigger ) {
+export function usePaletteHotkey( onTrigger, isOpen = false ) {
 	useEffect( () => {
 		const onKey = ( event ) => {
 			const modifier = event.metaKey || event.ctrlKey;
@@ -76,8 +77,11 @@ export function usePaletteHotkey( onTrigger ) {
 				return;
 			}
 
-			// Typing: leave the key to whoever owns the field.
-			if ( isEditableTarget( event.target ) ) {
+			// Typing: leave the key to whoever owns the field — except our own
+			// input. Without that exception the shortcut is dead once the
+			// palette has focus, so a second press escapes to whatever else is
+			// listening instead of closing the thing already on screen.
+			if ( ! isOpen && isEditableTarget( event.target ) ) {
 				return;
 			}
 
@@ -88,5 +92,5 @@ export function usePaletteHotkey( onTrigger ) {
 		document.addEventListener( 'keydown', onKey, true );
 
 		return () => document.removeEventListener( 'keydown', onKey, true );
-	}, [ onTrigger ] );
+	}, [ onTrigger, isOpen ] );
 }
