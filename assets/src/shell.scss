@@ -11,6 +11,7 @@
 body.mds-shell {
 	--mds-rail-w: 210px;
 	--mds-top-h: 56px;
+	--mds-page-x: 24px;
 
 	// Core's chrome, gone. Not `display: none` on #wpadminbar alone — core
 	// also offsets html by its height, so both have to go together.
@@ -30,10 +31,16 @@ body.mds-shell {
 		padding-top: 0 !important;
 	}
 
+	// The gutter lives here, on the container, rather than as a margin on
+	// `.wrap`. Core splits it between the two — `#wpcontent` gets 20px of
+	// padding-left and `.wrap` gets `margin: 10px 20px 0 2px` — which leaves
+	// the left and right gaps coming from different elements and never quite
+	// matching. One box owns the gutter, so it is symmetrical by construction.
 	#wpcontent,
 	#wpfooter {
 		margin-left: var(--mds-rail-w);
-		padding-left: 24px;
+		padding-left: var(--mds-page-x);
+		padding-right: var(--mds-page-x);
 	}
 
 	#wpbody-content {
@@ -41,8 +48,10 @@ body.mds-shell {
 	}
 
 	.wrap {
-		margin: 20px 24px 0 0;
-		max-width: 1320px;
+		// Core's asymmetric margin, removed. Horizontal margins here also
+		// fight the float+width:100% that #wpbody-content gives this element.
+		margin: 20px 0 0;
+		max-width: none;
 	}
 }
 

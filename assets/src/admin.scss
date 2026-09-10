@@ -323,14 +323,18 @@ body.wp-admin.mds-skin {
 
 	#wpcontent {
 		padding-left: var(--mds-gap);
+		padding-right: var(--mds-gap);
 	}
 
 	#wpbody-content {
 		padding-bottom: 40px;
 	}
 
+	// Same reasoning as the shell: the gutter belongs to #wpcontent, so the two
+	// sides cannot drift apart. Core's `margin: 10px 20px 0 2px` here is what
+	// produces the familiar off-centre admin page.
 	.wrap {
-		margin: var(--mds-gap) var(--mds-gap) 0 0;
+		margin: var(--mds-gap) 0 0;
 
 		h1,
 		h1.wp-heading-inline {
