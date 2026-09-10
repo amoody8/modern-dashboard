@@ -646,6 +646,136 @@
 		color: var(--md-muted);
 	}
 
+	// ----------------------------------------------------------------- roles
+
+	.md-capgroup + .md-capgroup {
+		margin-top: var(--md-space-5);
+		padding-top: var(--md-space-4);
+		border-top: 1px solid var(--md-border);
+	}
+
+	.md-capgroup__title {
+		margin: 0;
+		font-size: var(--md-text-md);
+		font-weight: var(--md-weight-semi);
+	}
+
+	.md-capgroup__note {
+		margin: var(--md-space-1) 0 0;
+		font-size: var(--md-text-sm);
+		color: var(--md-muted);
+		max-width: 68ch;
+	}
+
+	.md-capgroup__list {
+		list-style: none;
+		margin: var(--md-space-3) 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 2px;
+	}
+
+	.md-cap {
+		display: flex;
+		align-items: center;
+		gap: var(--md-space-2);
+		padding: 7px 10px;
+		border-radius: var(--md-radius-sm);
+
+		&:hover { background: var(--md-surface-hover); }
+
+		&.is-disabled { opacity: 0.55; }
+
+		// A changed row is marked on its edge rather than by colouring the
+		// text, so the label stays readable and the diff is still obvious.
+		&.is-changed {
+			background: var(--md-accent-soft);
+			box-shadow: inset 2px 0 0 var(--md-accent);
+		}
+	}
+
+	.md-cap__label {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		flex: 1 1 auto;
+		line-height: 1.35;
+		cursor: pointer;
+	}
+
+	.md-cap__name { color: var(--md-text); }
+
+	.md-cap__slug {
+		font-family: var(--md-font-mono);
+		font-size: 10.5px;
+		color: var(--md-muted);
+	}
+
+	.md-cap__flags {
+		display: flex;
+		gap: 4px;
+		flex: 0 0 auto;
+	}
+
+	.md-cap__flag {
+		font-size: var(--md-text-xs);
+		color: var(--md-muted);
+		border: 1px solid var(--md-border);
+		border-radius: var(--md-radius-pill);
+		padding: 1px 7px;
+		white-space: nowrap;
+
+		&--changed {
+			border-color: var(--md-accent);
+			color: var(--md-accent);
+		}
+	}
+
+	.md-impact + .md-impact {
+		margin-top: var(--md-space-3);
+		padding-top: var(--md-space-3);
+		border-top: 1px solid var(--md-border);
+	}
+
+	.md-impact__who {
+		display: flex;
+		align-items: baseline;
+		gap: var(--md-space-2);
+		font-size: var(--md-text-base);
+
+		span { color: var(--md-muted); font-size: var(--md-text-sm); }
+	}
+
+	.md-impact__caps {
+		list-style: none;
+		margin: var(--md-space-2) 0 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+
+	.md-impact__cap {
+		font-size: var(--md-text-xs);
+		font-family: var(--md-font-mono);
+		padding: 2px 8px;
+		border-radius: var(--md-radius-pill);
+		background: var(--md-surface-sunken);
+		color: var(--md-text-soft);
+
+		&--revoke { background: var(--md-bad-bg); color: var(--md-bad); }
+		&--grant { background: var(--md-good-bg); color: var(--md-good); }
+	}
+
+	.md-impact__none,
+	.md-impact__partial,
+	.md-roles__hint {
+		margin: var(--md-space-2) 0 0;
+		font-size: var(--md-text-sm);
+		color: var(--md-muted);
+	}
+
 	// ------------------------------------------------------------- reduced motion
 
 	@media (prefers-reduced-motion: reduce) {

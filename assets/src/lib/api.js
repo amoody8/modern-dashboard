@@ -65,6 +65,16 @@ export const api = {
 
 	auditLog: ( params ) => request( `audit${ query( params ) }` ),
 
+	roles: () => request( 'roles' ),
+
+	saveRoles: ( data ) => request( 'roles', { method: 'POST', data } ),
+
+	previewRoles: ( data ) =>
+		request( 'roles/preview', { method: 'POST', data } ),
+
+	resetCapabilityCatalogue: () =>
+		request( 'roles/catalogue', { method: 'DELETE' } ),
+
 	site: ( id ) => request( `sites/${ id }` ),
 
 	refreshSite: ( id ) =>

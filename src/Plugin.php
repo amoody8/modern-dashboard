@@ -39,8 +39,10 @@ use ModernDashboard\Rest\MenuRoutes;
 use ModernDashboard\Rest\AuditRoutes;
 use ModernDashboard\Roles\CapabilityCatalogue;
 use ModernDashboard\Roles\RoleApplier;
+use ModernDashboard\Roles\RolePreview;
 use ModernDashboard\Roles\RoleRules;
 use ModernDashboard\Rest\PaletteRoutes;
+use ModernDashboard\Rest\RoleRoutes;
 use ModernDashboard\Rest\ThemeRoutes;
 use ModernDashboard\Rest\Routes;
 use ModernDashboard\Settings\Settings;
@@ -208,6 +210,11 @@ final class Plugin {
 		// request that happens to re-register hooks.
 		$this->capability_catalogue()->register();
 		( new RoleApplier( $this->role_rules() ) )->register();
+		( new RoleRoutes(
+			$this->role_rules(),
+			$this->capability_catalogue(),
+			new RolePreview( $this->role_rules(), $this->repository() )
+		) )->register();
 		$this->audit_log()->register( $this->settings() );
 
 		( new Assets( $this, $palette_gate ) )->register();

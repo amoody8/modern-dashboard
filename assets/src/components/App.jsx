@@ -7,6 +7,7 @@ import { __, _n, sprintf } from '@wordpress/i18n';
 import Builder from '../builder/Builder';
 import ActivityLog from './ActivityLog';
 import MenuEditor from '../menu/MenuEditor';
+import RoleEditor from '../roles/RoleEditor';
 import ThemeEditor from '../theme/ThemeEditor';
 import DashboardRenderer from './DashboardRenderer';
 import SettingsPanel from './SettingsPanel';
@@ -31,6 +32,11 @@ const TABS = () => [
 	{
 		key: 'activity',
 		label: __( 'Activity', 'modern-dashboard' ),
+		manage: true,
+	},
+	{
+		key: 'roles',
+		label: __( 'Roles', 'modern-dashboard' ),
 		manage: true,
 	},
 	{
@@ -278,6 +284,8 @@ export default function App() {
 					) }
 
 					{ tab === 'activity' && canManage && <ActivityLog /> }
+
+					{ tab === 'roles' && canManage && <RoleEditor /> }
 
 					{ tab === 'menus' && canManage && <MenuEditor /> }
 
