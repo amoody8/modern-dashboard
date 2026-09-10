@@ -36,6 +36,7 @@
 	// calm rather than boxed.
 	--mds-bg: #ffffff;
 	--mds-surface: #ffffff;
+	--mds-surface-head: #fafafa;  // card headers, one step off the surface
 	--mds-rail-bg: #fafafa;       // zinc-50
 	--mds-sunken: #fafafa;        // zinc-50
 	--mds-hover: #f4f4f5;         // zinc-100
@@ -116,11 +117,15 @@ body.mds-dark {
 	// tinted surface against white; in dark it recedes further than the
 	// content instead. Both readings keep the content the brightest thing.
 	--mds-bg: #18181b;            // zinc-900 — content ground
-	--mds-surface: #18181b;       // zinc-900
+	// Cards LIFT off the ground rather than receding: measured #1d1d1f on
+	// #18181b, with a darker strip behind the card header. Elevation in dark
+	// is lightness, so a card that went darker would read as a hole.
+	--mds-surface: #1d1d1f;
+	--mds-surface-head: #141416;  // card headers and footers
 	--mds-rail-bg: #09090b;       // zinc-950 — rail and top bar recede
-	--mds-sunken: #09090b;        // zinc-950
+	--mds-sunken: #141416;
 	--mds-hover: #27272a;         // zinc-800
-	--mds-border: #27272a;        // zinc-800
+	--mds-border: #141416;        // the card outline is darker than the card
 	--mds-border-soft: #212124;
 	--mds-border-strong: #3f3f46; // zinc-700
 	--mds-text: #fafafa;          // zinc-50
@@ -332,11 +337,46 @@ body.wp-admin.mds-skin {
 
 		h1,
 		h1.wp-heading-inline {
-			font-size: 20px;
+			font-size: 19px;
 			font-weight: 650;
 			letter-spacing: -0.015em;
 			color: var(--mds-text);
+			padding: 0;
+			margin: 0 0 2px;
 		}
+	}
+
+	// Core's nav-tab row, rebuilt as the pill group their screens use. Same
+	// treatment as .subsubsub, since both are "pick one of these" controls.
+	.nav-tab-wrapper,
+	.wp-filter {
+		display: inline-flex;
+		gap: 2px;
+		padding: 3px;
+		margin: 0 0 16px;
+		background: var(--mds-sunken);
+		border: 0;
+		border-radius: var(--mds-radius);
+	}
+
+	.nav-tab {
+		margin: 0;
+		padding: 5px 12px;
+		border: 0;
+		border-radius: var(--mds-radius-sm);
+		background: transparent;
+		color: var(--mds-muted);
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.5;
+
+		&:hover { color: var(--mds-text); background: transparent; }
+	}
+
+	.nav-tab-active,
+	.nav-tab-active:hover {
+		background: var(--mds-border-strong);
+		color: var(--mds-text);
 	}
 
 	// Core's "Add New" next to a page title is a link styled as a button.
@@ -486,16 +526,29 @@ body.wp-admin.mds-skin {
 		border: 1px solid var(--mds-border);
 		border-radius: var(--mds-radius-lg);
 		box-shadow: var(--mds-shadow);
+		overflow: hidden;
 
+		// The header sits on its own strip, a step off the card surface. That
+		// separation is what lets a card carry a title and a status chip
+		// without needing a rule between them.
 		.postbox-header {
+			background: var(--mds-surface-head);
 			border-bottom: 1px solid var(--mds-border);
+			min-height: 0;
+			padding: 11px 16px;
 		}
 
 		h2,
 		h3 {
 			color: var(--mds-text);
-			font-size: 14px;
+			font-size: 13.5px;
 			font-weight: 600;
+			padding: 0;
+		}
+
+		.inside {
+			padding: 16px;
+			margin: 0;
 		}
 	}
 
@@ -507,13 +560,24 @@ body.wp-admin.mds-skin {
 
 	.form-table {
 		th {
-			color: var(--mds-text-soft);
+			color: var(--mds-text);
 			font-weight: 600;
-			padding: 16px 10px 16px 0;
+			font-size: 13px;
+			padding: 18px 20px 18px 0;
+			width: 200px;
 		}
 
 		td {
-			padding: 12px 10px;
+			padding: 14px 0;
+			font-size: 13px;
+		}
+
+		// Help text sits under its field, muted and smaller — core's default
+		// runs it at body size, which competes with the label.
+		.description {
+			color: var(--mds-muted);
+			font-size: 12.5px;
+			margin-top: 6px;
 		}
 	}
 
@@ -527,11 +591,14 @@ body.wp-admin.mds-skin {
 	input[type='date'],
 	select,
 	textarea {
-		background: var(--mds-surface);
-		border: 1px solid var(--mds-border-strong);
+		background: var(--mds-bg);
+		border: 1px solid var(--mds-hover);
 		border-radius: var(--mds-radius-sm);
 		color: var(--mds-text);
 		box-shadow: none;
+		padding: 7px 11px;
+		font-size: 13px;
+		min-height: 34px;
 
 		&:focus {
 			border-color: var(--mds-accent);
@@ -583,11 +650,16 @@ body.wp-admin.mds-skin {
 
 	.wp-core-ui .button,
 	.wp-core-ui .button-secondary {
-		background: var(--mds-surface);
-		border-color: var(--mds-border-strong);
+		background: var(--mds-hover);
+		border-color: transparent;
 		color: var(--mds-text-soft);
 		border-radius: var(--mds-radius-sm);
 		box-shadow: none;
+		font-weight: 500;
+		font-size: 12.5px;
+		padding: 5px 12px;
+		height: auto;
+		line-height: 1.6;
 
 		&:hover,
 		&:focus {

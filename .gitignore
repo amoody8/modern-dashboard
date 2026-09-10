@@ -3,3 +3,6 @@ vendor/
 .DS_Store
 *.log
 .phpcs-cache
+
+# Another product's screenshots; reference only, never shipped.
+.design-reference/
