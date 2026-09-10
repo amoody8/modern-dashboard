@@ -4,7 +4,7 @@ Tags: multisite, network, dashboard, admin, white-label
 Requires at least: 6.6
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,6 +58,16 @@ Inside the block editor, Cmd/Ctrl+K stays with the editor's own link shortcut an
 
 To switch it off: ?mdash-palette=off for one page load, localStorage.setItem('mdash-palette','off') for one browser, or the network setting for everyone.
 
+= Activity log =
+
+Records who published, activated a plugin, changed a role, switched a theme or created a site, across every site in the network, with search and time-range filters.
+
+Deliberately narrow: administrative changes, not general activity. Logging every page view would produce something too large to store and too noisy to read.
+
+Network administrators only. An audit entry is a fact about a person, and it holds detail — including titles of unpublished content that was deleted — that the rest of this plugin deliberately does not surface.
+
+Retention defaults to 90 days.
+
 = Network-controlled =
 
 The network admin sets the collection schedule, builds the dashboards, decides which role sees which one, picks which sites are excluded, and chooses whether site administrators may see their own site's numbers. Individual sites inherit those decisions.
@@ -97,6 +107,13 @@ Yes. Pick the site in the Branding tab and give it its own theme. A site overrid
 Only if you let them. When enabled, a site administrator sees a read-only view of their own site under **Dashboard → Site Metrics** and nothing about the rest of the network.
 
 == Changelog ==
+
+= 0.6.0 =
+* Added the activity log: administrative changes across every site, with search, event-type and time-range filters.
+* Uses a custom table — the plugin's first. A log cannot tolerate lost writes the way the plugin's observational stores can, and read-modify-write on a shared option cannot promise durability.
+* Network administrators only, deliberately: audit entries are facts about people, and include unpublished titles that the search index refuses to store.
+* Retention defaults to 90 days and prunes on the existing collection batch rather than a second cron.
+* The admin theme is now a setting — dark by default, with light and follow-the-system.
 
 = 0.5.0 =
 * Added the command palette: Cmd/Ctrl+K (or Cmd/Ctrl+Shift+P) on any admin screen, searching commands, sites and content.

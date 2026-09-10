@@ -61,6 +61,10 @@ live preview and WCAG contrast warnings on every foreground/background pair.
 and content, and jump straight there. Off by default — see
 [The command palette](#the-command-palette).
 
+**Activity log.** Who published, activated a plugin, changed a role or switched
+a theme, across every site, with search and time-range filters. Network
+administrators only; see [The activity log](#the-activity-log).
+
 **Network-controlled settings.** Collection interval and batch size, storage
 scanning on/off with a per-site time budget, staleness and inactivity
 thresholds, excluded sites, and whether site administrators may see their own
@@ -260,6 +264,11 @@ src/
     IndexBuilder.php          Fills it, riding the collection batch
     LiveSearch.php            Current-site query, live
     SearchController.php      Assembles a response; owns the tenant boundary
+  Audit/
+    Schema.php                The log's table, and its only schema
+    Recorder.php              Writes entries; never blocks the action it logs
+    Events.php                Which WordPress hooks are worth recording
+    LogRepository.php         Query, prune, and the read boundary
   Cron/Scheduler.php          Batched background refresh
   Rest/Routes.php             modern-dashboard/v1
   Rest/BuilderRoutes.php      Builder endpoints in the same namespace
@@ -329,6 +338,40 @@ scheduling. Above 500 sites, network-wide *content* search switches off and only
 site names stay searchable — the palette says so rather than quietly returning
 less than you expect.
 
+### The activity log
+
+Records administrative changes across the network: posts published, trashed and
+deleted; plugins activated and deactivated; themes switched; users registered,
+deleted and re-roled; logins and failed logins; sites created and deleted.
+Deliberately *not* general activity — logging every page view and every option
+a plugin touches on `init` produces something too large to store and too noisy
+to read, and answers none of the questions an administrator actually has.
+
+**It uses a custom table**, which nothing else in this plugin does. The reason
+is durability rather than query shape. Everything else here is an observation
+that converges: `MenuCatalogue` says outright that "a lost concurrent write is
+repaired by the next admin page load". A log does not converge — a dropped
+entry is simply gone, and a log that silently drops entries is worse than no
+log, because it invites confidence it has not earned. Read-modify-write on a
+shared option cannot promise that; an `INSERT` can. The table also gives real
+indexes on time, site, actor and action, which is what a log is queried by.
+
+**Reading it requires the network capability**, and unlike the metrics
+endpoints there is no per-site view for site administrators. An audit entry is
+a fact about a person — who did what, from which address — and even a
+site-scoped slice discloses who logged in when and whose role was changed by
+whom.
+
+One consequence is easy to miss and worth stating: the search index stores only
+*published* content on the grounds that drafts carry disclosure risk with
+little search value. A deletion event is useless unless it names what was
+deleted, and the thing deleted was often never published — so this table holds
+unpublished titles the search index refuses to hold. That is why its gate is
+tighter, not looser.
+
+Retention defaults to 90 days and is pruned on the existing collection batch
+rather than by a second cron. `0` keeps everything.
+
 ## REST API
 
 Namespace `modern-dashboard/v1`. All routes require `manage_network_dashboard`
@@ -352,6 +395,7 @@ when the network allows it.
 | `/menu/catalogue` | DELETE | Clear the catalogue so it rebuilds from scratch |
 | `/theme` | GET / POST | The network-wide branding |
 | `/theme/site/{id}` | GET / POST / DELETE | One site's branding override |
+| `/audit` | GET | Activity log: `search`, `group`, `action`, `blog_id`, `user_id`, `since`, `until`, `page`, `per_page` |
 | `/palette/commands` | GET | Commands available to the current user, with group labels |
 | `/palette/search` | GET | `term`, `types`, `limit`. Live, indexed and site results |
 
