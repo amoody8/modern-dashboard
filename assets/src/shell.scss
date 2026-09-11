@@ -375,7 +375,9 @@ html.wp-toolbar:has(body.mds-shell) {
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
-	padding: 0 24px;
+	// The same token the content gutter uses, so the header title and the page
+	// heading below it share a left edge rather than agreeing by coincidence.
+	padding: 0 var(--mds-page-x);
 	// The top bar belongs with the rail, not the content — same recessive
 	// surface, which is what makes the content read as the lit plane.
 	background: var(--mds-rail-bg);
