@@ -334,7 +334,7 @@ body.wp-admin.mds-skin {
 	// sides cannot drift apart. Core's `margin: 10px 20px 0 2px` here is what
 	// produces the familiar off-centre admin page.
 	.wrap {
-		margin: var(--mds-gap) 0 0;
+		margin: var(--mds-gap) 0;
 
 		h1,
 		h1.wp-heading-inline {

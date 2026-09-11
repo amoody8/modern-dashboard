@@ -50,7 +50,9 @@ body.mds-shell {
 	.wrap {
 		// Core's asymmetric margin, removed. Horizontal margins here also
 		// fight the float+width:100% that #wpbody-content gives this element.
-		margin: 20px 0 0;
+		// Vertical only, and the same value as the container's horizontal
+		// padding so the page sits evenly inside its frame.
+		margin: var(--mds-page-x) 0;
 		max-width: none;
 	}
 }

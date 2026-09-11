@@ -13,7 +13,10 @@
 @use 'styles/components';
 
 .modern-dashboard {
-	margin: 20px 20px 0 0;
+	// No margin of its own. The gutter belongs to #wpcontent, which applies it
+	// symmetrically; adding 20px here on two sides is what made the page sit
+	// 44px from the right and 24px from the left. The same mistake core makes
+	// with `.wrap`, one layer further in.
 
 	// ---------------------------------------------------------------- layout
 
