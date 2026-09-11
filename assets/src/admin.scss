@@ -204,9 +204,11 @@ body.wp-admin.mds-skin {
 		box-shadow: none;
 	}
 
-	#adminmenuback,
-	#adminmenumain {
-		width: var(--mds-rail);
+	&:not(.mds-shell) {
+		#adminmenuback,
+		#adminmenumain {
+			width: var(--mds-rail);
+		}
 	}
 
 	#adminmenuwrap {
@@ -316,9 +318,17 @@ body.wp-admin.mds-skin {
 	// -------------------------------------------------------------- content
 
 	// The offset core sets for its own docked sidebar, corrected for ours.
-	#wpcontent,
-	#wpfooter {
-		margin-left: var(--mds-rail);
+	//
+	// Scoped to `:not(.mds-shell)`: when the shell is active it replaces the
+	// sidebar entirely and owns this layout. Without the guard both
+	// stylesheets claim #wpcontent, the skin's two-class selector wins on
+	// specificity, and the content is offset by the skin's narrower rail —
+	// which puts it underneath the shell's wider one.
+	&:not(.mds-shell) {
+		#wpcontent,
+		#wpfooter {
+			margin-left: var(--mds-rail);
+		}
 	}
 
 	#wpcontent {
@@ -728,21 +738,26 @@ body.wp-admin.mds-skin {
 		}
 	}
 
-	@media screen and (max-width: 960px) {
-		--mds-rail: 0px;
+	// The skin's own mobile collapse. Scoped away from the shell for the same
+	// reason as the desktop rule: the shell has its own breakpoint and its own
+	// rail, and an unscoped `margin-left: 0` here would undo it.
+	&:not(.mds-shell) {
+		@media screen and (max-width: 960px) {
+			--mds-rail: 0px;
 
-		#adminmenuwrap,
-		#adminmenuback,
-		#adminmenumain {
-			margin: 0;
-			border: 0;
-			border-radius: 0;
-			width: auto;
-		}
+			#adminmenuwrap,
+			#adminmenuback,
+			#adminmenumain {
+				margin: 0;
+				border: 0;
+				border-radius: 0;
+				width: auto;
+			}
 
-		#wpcontent,
-		#wpfooter {
-			margin-left: 0;
+			#wpcontent,
+			#wpfooter {
+				margin-left: 0;
+			}
 		}
 	}
 }

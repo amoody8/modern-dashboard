@@ -36,9 +36,15 @@ body.mds-shell {
 	// padding-left and `.wrap` gets `margin: 10px 20px 0 2px` — which leaves
 	// the left and right gaps coming from different elements and never quite
 	// matching. One box owns the gutter, so it is symmetrical by construction.
+	//
+	// `!important` is not something to reach for lightly, but the skin also
+	// styles #wpcontent for its own narrower rail, and its two-class selector
+	// outranks this one. Scoping the skin away from `.mds-shell` fixes that
+	// properly; this is the belt to that braces, because content sliding under
+	// the sidebar is the one failure here that makes the page unusable.
 	#wpcontent,
 	#wpfooter {
-		margin-left: var(--mds-rail-w);
+		margin-left: var(--mds-rail-w) !important;
 		padding-left: var(--mds-page-x);
 		padding-right: var(--mds-page-x);
 	}
