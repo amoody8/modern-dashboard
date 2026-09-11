@@ -57,7 +57,10 @@ export function StatCard( { label, value, hint, tone = 'neutral', footer } ) {
 export function EmptyState( { title, description } ) {
 	return (
 		<div className="md-empty">
-			<strong>{ title }</strong>
+			{ /* An h3, not a strong: the styles target a heading, and an
+			     inline element with no margin sits jammed against its
+			     description. This had been rendering unstyled everywhere. */ }
+			<h3>{ title }</h3>
 			{ description && <p>{ description }</p> }
 		</div>
 	);

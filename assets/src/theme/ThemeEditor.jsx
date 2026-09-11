@@ -535,14 +535,11 @@ export default function ThemeEditor() {
 
 				<div className="md-branding__side">
 					<Panel title={ __( 'Preview', 'modern-dashboard' ) }>
-						<div className="md-panel__pad">
-							<ThemePreview theme={ theme } />
-						</div>
+													<ThemePreview theme={ theme } />
 					</Panel>
 
 					<Panel title={ __( 'Legibility', 'modern-dashboard' ) }>
-						<div className="md-panel__pad">
-							<ContrastReport theme={ theme } pairs={ pairs } />
+													<ContrastReport theme={ theme } pairs={ pairs } />
 							<p className="md-field__help">
 								{ sprintf(
 									/* translators: %s: query argument name, e.g. mdash-theme */
@@ -553,7 +550,6 @@ export default function ThemeEditor() {
 									bypassArg
 								) }
 							</p>
-						</div>
 					</Panel>
 				</div>
 			</div>

@@ -45,6 +45,14 @@
 		color: var(--md-muted);
 	}
 
+	// Structural only — the heading block groups a title and subtitle so the
+	// actions can sit opposite them. Named for readability, not for styling.
+	.md-page-header__heading,
+	.md-panel__heading,
+	.md-capgroup__header {
+		min-width: 0;
+	}
+
 	.md-page-header__actions {
 		display: flex;
 		flex-wrap: wrap;
@@ -774,6 +782,22 @@
 		margin: var(--md-space-2) 0 0;
 		font-size: var(--md-text-sm);
 		color: var(--md-muted);
+	}
+
+	// `md-numeric` is the older name for the same idea as the table's
+	// `is-numeric`; the block renderers still emit it.
+	.md-numeric {
+		text-align: end;
+		font-variant-numeric: tabular-nums;
+	}
+
+	// Printed by NetworkAdminPage.php before React mounts. Without this the
+	// first paint is unstyled text.
+	.md-booting {
+		padding: var(--md-space-8) var(--md-space-5);
+		text-align: center;
+		color: var(--md-muted);
+		font-size: var(--md-text-sm);
 	}
 
 	// ------------------------------------------------------------- reduced motion
