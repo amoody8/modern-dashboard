@@ -331,7 +331,10 @@ body.wp-admin.mds-skin {
 		}
 	}
 
-	#wpcontent {
+	// Scoped like the margin rule above it: when the shell is active it owns
+	// the page gutter, and this two-class selector would otherwise outrank the
+	// shell's and quietly apply the skin's narrower value.
+	&:not(.mds-shell) #wpcontent {
 		padding-left: var(--mds-gap);
 		padding-right: var(--mds-gap);
 	}

@@ -31,6 +31,7 @@
 
 	.md-page-header__title {
 		margin: 0;
+		color: var(--md-text);
 		padding: 0;
 		font-size: var(--md-text-xl);
 		font-weight: var(--md-weight-bold);
@@ -86,6 +87,11 @@
 	.md-panel__title {
 		display: block;
 		margin: 0;
+		// Core ships `h2, h3 { color: #1d2327 }`, which wins over any rule of
+		// ours that does not set colour at all — so on the dark theme a panel
+		// title was near-black on a near-black panel. Headings must state
+		// their colour rather than expecting to inherit it.
+		color: var(--md-text);
 		padding: 0;
 		font-size: var(--md-text-md);
 		font-weight: var(--md-weight-semi);
@@ -667,6 +673,7 @@
 
 	.md-capgroup__title {
 		margin: 0;
+		color: var(--md-text);
 		font-size: var(--md-text-md);
 		font-weight: var(--md-weight-semi);
 	}

@@ -308,14 +308,26 @@ final class Shell {
 		return (string) $pagenow;
 	}
 
+	/**
+	 * What this screen is called.
+	 *
+	 * Not derived from `$screen->base`: that produces strings like "Dashboard
+	 * Page Modern Dashboard" for a plugin page, which is machine naming leaking
+	 * into the interface. WordPress already knows the human title — it is what
+	 * goes in the browser tab — so use that and fall back to the menu label.
+	 */
 	private function screen_title(): string {
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$title = wp_strip_all_tags( (string) get_admin_page_title() );
 
-		if ( $screen && ! empty( $screen->base ) ) {
-			return ucwords( str_replace( array( '-', '_' ), ' ', (string) $screen->base ) );
+		if ( '' !== trim( $title ) ) {
+			return $title;
 		}
 
-		return '';
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+		return $screen && ! empty( $screen->base )
+			? ucwords( str_replace( array( '-', '_' ), ' ', (string) $screen->base ) )
+			: '';
 	}
 
 	/**

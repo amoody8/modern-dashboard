@@ -6,3 +6,6 @@ vendor/
 
 # Another product's screenshots; reference only, never shipped.
 .design-reference/
+
+# Output of npm run shot.
+screenshot.png

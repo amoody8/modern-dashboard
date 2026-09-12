@@ -136,46 +136,10 @@
 // opt-in class. `admin-color-modern` is WordPress's *default*, so pairing it
 // with a dark OS inferred a preference nobody expressed: anyone on a dark Mac
 // got a dark admin they never chose and could not turn off from here.
-@media (prefers-color-scheme: dark) {
-	body.mds-theme-dark .modern-dashboard,
-	body.mds-theme-system .modern-dashboard {
-		--md-bg: #12141a;
-		--md-surface: #1a1d25;
-		--md-surface-sunken: #16181f;
-		--md-surface-hover: #21252f;
-		--md-border: #272b35;
-		--md-border-strong: #383e4b;
-		--md-text: #e9eaf0;
-		--md-text-soft: #b9bec9;
-		--md-muted: #949aa8;
-
-		// Lifted and desaturated: the light-mode indigo is unreadable on a dark
-		// ground, and a fully saturated one vibrates against it.
-		--md-accent: #8b88f0;
-		--md-accent-hover: #a2a0f5;
-		--md-accent-soft: #232149;
-		--md-accent-text: #12141a;
-
-		--md-good: #4ec99a;
-		--md-good-bg: #16302a;
-		--md-warn: #e6ab55;
-		--md-warn-bg: #33260f;
-		--md-bad: #f0857a;
-		--md-bad-bg: #3a1f1d;
-		--md-info: #7db4ee;
-		--md-info-bg: #17273a;
-
-		--md-chart-bar: #8b88f0;
-		--md-chart-track: #262a33;
-
-		// Elevation in a dark UI reads as lightness, not shadow — the light
-		// shadow is nearly invisible here, so surfaces do the work.
-		--md-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
-		--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
-	}
-}
-
-// Chosen explicitly: the same tokens, applied without waiting on the OS.
+// One dark palette, from the stamped class. `system` gets the same values
+// behind a media query rather than a second, drifting copy — the earlier
+// duplicate still held the pre-uiXpress colours and won whenever the OS was
+// dark, which is how panel titles ended up near-black on a near-black panel.
 body.mds-theme-dark .modern-dashboard {
 	--md-bg: #18181b;
 	--md-surface: #1d1d1f;
@@ -202,4 +166,34 @@ body.mds-theme-dark .modern-dashboard {
 	--md-chart-track: #27272a;
 	--md-shadow: none;
 	--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+	body.mds-theme-system .modern-dashboard {
+		--md-bg: #18181b;
+		--md-surface: #1d1d1f;
+		--md-surface-sunken: #141416;
+		--md-surface-hover: #27272a;
+		--md-border: #141416;
+		--md-border-strong: #3f3f46;
+		--md-text: #fafafa;
+		--md-text-soft: #d4d4d8;
+		--md-muted: #71717b;
+		--md-accent: #7c86ff;
+		--md-accent-hover: #969dff;
+		--md-accent-soft: #1c1f49;
+		--md-accent-text: #18181b;
+		--md-good: #45c491;
+		--md-good-bg: #16302a;
+		--md-warn: #d9a25c;
+		--md-warn-bg: #33260f;
+		--md-bad: #ef8378;
+		--md-bad-bg: #3a1f1d;
+		--md-info: #7db4ee;
+		--md-info-bg: #17273a;
+		--md-chart-bar: #7c86ff;
+		--md-chart-track: #27272a;
+		--md-shadow: none;
+		--md-shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+	}
 }
